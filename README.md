@@ -6,6 +6,29 @@
 
 A comprehensive .NET helper library providing utility functions for weather-related operations. Includes conversion helpers for temperature, wind speed, length, and pressure, along with specialized helpers for Open-Meteo, Geocodio, and IpGeolocation.io weather data processing and transformation.
 
+**Created by**: Joshua Arzt | **Company**: Xcalibur Systems, LLC.
+
+## 📋 Table of Contents
+
+- [Features](#features)
+  - [Conversion Utilities](#conversion-utilities)
+  - [Weather Service Helpers](#weather-service-helpers)
+- [Installation](#installation)
+- [Requirements](#requirements)
+- [Usage](#usage)
+  - [Temperature Conversion](#temperature-conversion)
+  - [Wind Speed Conversion](#wind-speed-conversion)
+  - [Length Conversion](#length-conversion)
+  - [Pressure Conversion](#pressure-conversion)
+  - [OpenMeteo Helper](#openmeteo-helper)
+  - [Geocodio Helper](#geocodio-helper)
+  - [IpGeolocation Helper](#ipgeolocation-helper)
+- [API Overview](#api-overview)
+- [Best Practices](#best-practices)
+- [Dependencies](#dependencies)
+- [License](#license)
+- [Related Projects](#related-projects)
+
 ## Features
 
 ### Conversion Utilities
@@ -276,22 +299,22 @@ This library depends on:
 - [Xcalibur.Weather.Models](https://www.nuget.org/packages/Xcalibur.Weather.Models/) - Weather data models
 - [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) - Hosting abstractions
 
-## Related Packages
-
-- **Xcalibur.Weather.Models** - Core weather data models and enumerations
-- **Xcalibur.Weather.Services** - HTTP client services for weather APIs
-
 ## License
+
+This project is licensed under the Apache License 2.0. See the [LICENSE-2.0.txt](LICENSE-2.0.txt) file for details.
 
 Copyright © 2006 - 2026, Xcalibur Systems, LLC - All Rights Reserved
 
-Licensed under the Apache License, Version 2.0. See [LICENSE-2.0.txt](LICENSE-2.0.txt) for details.
+## Related Projects
+
+- **[Xcalibur.Weather.Models](https://www.nuget.org/packages/Xcalibur.Weather.Models/)** - Core weather data models and DTOs ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Models))
+- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** - HTTP client services for weather APIs ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
+
+---
+
+*Part of the Xcalibur Weather ecosystem for comprehensive weather data integration.*
 
 ## Author
 
 **Joshua Arzt**  
 Xcalibur Systems, LLC
-
----
-
-*Part of the Xcalibur Weather ecosystem for comprehensive weather data integration.*
