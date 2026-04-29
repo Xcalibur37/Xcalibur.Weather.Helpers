@@ -12,6 +12,10 @@ public static class ConversionHelper
     private const double CelsiusToFahrenheitRatio = 1.8;
     private const double FahrenheitOffset = 32.0;
     private const double FahrenheitToCelsiusRatio = 5.0 / 9.0;
+    
+    /// <summary>
+    /// The degree symbol
+    /// </summary>
     public const string DegreeSymbol = "\u00B0";
     
     #endregion
