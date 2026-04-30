@@ -162,6 +162,164 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
         }
 
         /// <summary>
+        /// Builds the current forecast should return current forecast point when current data present.
+        /// </summary>
+        [Fact]
+        public async Task BuildCurrentForecast_ShouldReturnCurrentForecastPoint_WhenCurrentDataPresent()
+        {
+            // Arrange — time set to "now" so day/night assessment picks daytime
+            var timeValue = DateTime.Now.ToString("yyyy-MM-ddTHH:00");
+            var json =
+                $$$"""
+                {
+                  "current": {
+                    "time": "{{{timeValue}}}",
+                    "interval": 900,
+                    "temperature_2m": 22.5,
+                    "relative_humidity_2m": 60,
+                    "apparent_temperature": 21.0,
+                    "precipitation": 0.0,
+                    "rain": 0.0,
+                    "showers": 0.0,
+                    "snowfall": 0.0,
+                    "weather_code": 1,
+                    "cloud_cover": 25,
+                    "pressure_msl": 1015.0,
+                    "surface_pressure": 1013.0,
+                    "wind_speed_10m": 12.0,
+                    "wind_direction_10m": 270,
+                    "wind_gusts_10m": 18.0
+                  }
+                }
+                """;
+
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+            try
+            {
+                var logger = NullLogger.Instance;
+                var sunrise = new TimeOnly(6, 0);
+                var sunset = new TimeOnly(22, 0);
+
+                // Act
+                var point = await OpenMeteoHelper.BuildCurrentForecast("12.34", "56.78", true, sunrise, sunset, logger);
+
+                // Assert
+                point.Should().NotBeNull();
+                point!.Temperature.Should().BeApproximately(22.5, 0.0001);
+                point.RelativeHumidity.Should().BeApproximately(60.0, 0.0001);
+                point.ApparentTemperature.Should().BeApproximately(21.0, 0.0001);
+                point.WindSpeed.Should().BeApproximately(12.0, 0.0001);
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
+
+        /// <summary>
+        /// Builds the current forecast should return null when current data is absent.
+        /// </summary>
+        [Fact]
+        public async Task BuildCurrentForecast_ShouldReturnNull_WhenCurrentDataAbsent()
+        {
+            // Arrange — response with no "current" block
+            var json = """{}""";
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+            try
+            {
+                var logger = NullLogger.Instance;
+
+                // Act
+                var point = await OpenMeteoHelper.BuildCurrentForecast("0", "0", false, null, null, logger);
+
+                // Assert
+                point.Should().BeNull();
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
+
+        /// <summary>
+        /// Builds yesterday's forecast should return hourly forecast points when data present.
+        /// </summary>
+        [Fact]
+        public async Task BuildYesterdaysForecast_ShouldReturnHourlyForecastPoints_WhenDataPresent()
+        {
+            // Arrange — two hourly entries for yesterday
+            var yesterday = DateTime.Now.AddDays(-1);
+            var hour0 = yesterday.Date.ToString("yyyy-MM-ddTHH:00");
+            var hour1 = yesterday.Date.AddHours(1).ToString("yyyy-MM-ddTHH:00");
+
+            var hourlyObj = new
+            {
+                hourly = new
+                {
+                    time = new[] { hour0, hour1 },
+                    weather_code = new[] { 0, 1 },
+                    temperature_2m = new[] { 10.0, 11.0 },
+                    apparent_temperature = new[] { 9.0, 10.0 },
+                    relative_humidity_2m = new[] { 70.0, 71.0 },
+                    dew_point_2m = new[] { 4.0, 4.5 },
+                    precipitation_probability = new[] { 5.0, 10.0 },
+                    precipitation = new[] { 0.0, 0.1 },
+                    rain = new[] { 0.0, 0.0 },
+                    showers = new[] { 0.0, 0.0 },
+                    snowfall = new[] { 0.0, 0.0 },
+                    snow_depth = new[] { 0.0, 0.0 },
+                    pressure_msl = new[] { 1012.0, 1011.5 },
+                    surface_pressure = new[] { 1014.0, 1013.5 },
+                    cloud_cover = new[] { 30.0, 40.0 },
+                    visibility = new[] { 8000, 9000 },
+                    wind_speed_10m = new[] { 5.0, 6.0 },
+                    wind_direction_10m = new[] { 90, 100 },
+                    wind_gusts_10m = new[] { 8.0, 9.0 }
+                }
+            };
+
+            var json = JsonSerializer.Serialize(hourlyObj);
+
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+            try
+            {
+                var logger = NullLogger.Instance;
+                var sunrise = new TimeOnly(6, 0);
+                var sunset = new TimeOnly(20, 0);
+
+                // Act
+                var points = await OpenMeteoHelper.BuildYesterdaysForecast("12.34", "56.78", true, sunrise, sunset, logger);
+
+                // Assert
+                points.Should().NotBeNull();
+                points.Should().HaveCount(2);
+                points![0].DateValue.Should().Be(hour0);
+                points[0].Temperature.Should().BeApproximately(10.0, 0.0001);
+                points[1].DateValue.Should().Be(hour1);
+                points[1].Temperature.Should().BeApproximately(11.0, 0.0001);
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
+
+        /// <summary>
         /// Builds the hourly forecast should map hourly points and mark current.
         /// </summary>
         /// <returns></returns>

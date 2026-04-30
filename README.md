@@ -23,6 +23,8 @@ A comprehensive .NET helper library providing utility functions for weather-rela
   - [OpenMeteo Helper](#openmeteo-helper)
   - [Geocodio Helper](#geocodio-helper)
   - [IpGeolocation Helper](#ipgeolocation-helper)
+  - [SunriseSunset Helper](#sunrisesunset-helper)
+  - [OpenStreetMap Helper](#openstreetmap-helper)
 - [API Overview](#api-overview)
 - [Best Practices](#best-practices)
 - [Dependencies](#dependencies)
@@ -42,6 +44,8 @@ A comprehensive .NET helper library providing utility functions for weather-rela
 - **OpenMeteoHelper**: Build air quality points, current forecasts, hourly forecasts, daily forecasts, and yesterday's data
 - **GeocodioHelper**: Test API keys, build address locations from geocoding queries
 - **IpGeoHelper**: Build sun/moon points and test API connectivity for astronomical data
+- **SunriseSunsetHelper**: Fetch sunrise/sunset and astronomical data from SunriseSunset.io — no API key required
+- **OpenStreetMapHelper**: Geocode addresses using the OpenStreetMap Nominatim API — no API key required
 
 ## Installation
 
@@ -57,7 +61,7 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.0" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.2" />
 ```
 
 ## Requirements
@@ -231,6 +235,34 @@ var sunMoonData = await IpGeoHelper.BuildSunMoonPoint(
 );
 ```
 
+### SunriseSunset Helper
+
+```csharp
+using Xcalibur.Weather.Helpers.Services;
+using Microsoft.Extensions.Logging;
+
+// Build sun/moon data — no API key required
+var sunMoonData = await SunriseSunsetHelper.BuildSunMoonPoint(
+    latitude: "40.7128",
+    longitude: "-74.0060",
+    logger: logger
+);
+```
+
+### OpenStreetMap Helper
+
+```csharp
+using Xcalibur.Weather.Helpers.Services;
+using Microsoft.Extensions.Logging;
+
+// Geocode an address — no API key required
+var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync(
+    query: "1600 Pennsylvania Avenue NW, Washington, DC",
+    country: "US",
+    logger: logger
+);
+```
+
 ## API Overview
 
 ### ConversionHelper
@@ -267,6 +299,18 @@ var sunMoonData = await IpGeoHelper.BuildSunMoonPoint(
 |--------|-------------|
 | `TestApiKeyAsync(string, ILogger)` | Tests the validity of an IpGeolocation API key |
 | `BuildSunMoonPoint(string, string, string, ILogger)` | Retrieves and builds sun/moon astronomical data |
+
+### SunriseSunsetHelper
+
+| Method | Description |
+|--------|-------------|
+| `BuildSunMoonPoint(string, string, ILogger?)` | Fetches sunrise/sunset data from SunriseSunset.io and maps it to a `SunMoonPoint` — no API key required |
+
+### OpenStreetMapHelper
+
+| Method | Description |
+|--------|-------------|
+| `BuildAddressLocationsAsync(string, string, ILogger?)` | Geocodes an address query via OpenStreetMap Nominatim and returns location models — no API key required |
 
 ## Best Practices
 

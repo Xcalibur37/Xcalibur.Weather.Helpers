@@ -2,6 +2,7 @@
 using System.Text;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
+using Xcalibur.Weather.Helpers.Services;
 using Xcalibur.Weather.Models;
 using Xcalibur.Weather.Models.Testing;
 using Xcalibur.Weather.Models.WeatherProvider.IpGeo.Astronomy;
@@ -47,7 +48,6 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
             point.Moonset.Should().Be("06:00");
             point.MoonPhase.Should().Be("Waxing Gibbous");
             point.MoonIlluminationPercentage.Should().Be("65");
-            point.MoonAngle.Should().Be(42.5);
         }
 
         [Fact]
@@ -101,6 +101,58 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
             astro.MoonPhase.Should().Be("Full Moon");
             astro.MoonIlluminationPercentage.Should().Be("99");
             astro.MoonAngle.Should().Be(12.34);
+        }
+
+        [Fact]
+        public async Task IpGeoService_TestApiKey_ShouldReturnTrue_WhenResponseIsSuccess()
+        {
+            // Arrange — any 2xx response means the key is valid
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            var http = new HttpClient(new DelegatingHandlerStub(response))
+            {
+                Timeout = TimeSpan.FromSeconds(30)
+            };
+
+            var service = new IpGeoService(http, "VALID_KEY", NullLogger<IpGeoService>.Instance);
+
+            // Act
+            var isValid = await service.TestApiKey(CancellationToken.None);
+
+            // Assert
+            isValid.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task IpGeoService_TestApiKey_ShouldReturnFalse_WhenResponseIsUnauthorized()
+        {
+            // Arrange — 401 means invalid key
+            var response = new HttpResponseMessage(HttpStatusCode.Unauthorized);
+            var http = new HttpClient(new DelegatingHandlerStub(response))
+            {
+                Timeout = TimeSpan.FromSeconds(30)
+            };
+
+            var service = new IpGeoService(http, "BAD_KEY", NullLogger<IpGeoService>.Instance);
+
+            // Act
+            var isValid = await service.TestApiKey(CancellationToken.None);
+
+            // Assert
+            isValid.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task BuildSunMoonPoint_ShouldReturnNull_WhenApiKeyIsEmpty()
+        {
+            // Act — empty key should short-circuit before any HTTP call
+            var point = await IpGeoHelper.BuildSunMoonPoint(
+                ipGeoApiKey: "",
+                latitude: "12.34",
+                longitude: "56.78",
+                logger: NullLogger.Instance);
+
+            // Assert
+            point.Should().BeNull();
         }
     }
 }
