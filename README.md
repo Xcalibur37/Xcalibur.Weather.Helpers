@@ -4,7 +4,7 @@
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
 
-A comprehensive .NET helper library providing utility functions for weather-related operations. Includes conversion helpers for temperature, wind speed, length, and pressure, along with specialized helpers for Open-Meteo, Geocodio, and IpGeolocation.io weather data processing and transformation.
+A comprehensive .NET helper library providing utility functions for weather-related operations. Includes conversion helpers for temperature, wind speed, length, and pressure, along with specialized helpers for Open-Meteo, Geocodio, IpGeolocation.io, Google Pollen, SunriseSunset.io, and OpenStreetMap weather data processing and transformation.
 
 **Created by**: Joshua Arzt | **Company**: Xcalibur Systems, LLC.
 
@@ -25,6 +25,7 @@ A comprehensive .NET helper library providing utility functions for weather-rela
   - [IpGeolocation Helper](#ipgeolocation-helper)
   - [SunriseSunset Helper](#sunrisesunset-helper)
   - [OpenStreetMap Helper](#openstreetmap-helper)
+  - [Google Pollen Helper](#google-pollen-helper)
 - [API Overview](#api-overview)
 - [Best Practices](#best-practices)
 - [Dependencies](#dependencies)
@@ -46,6 +47,7 @@ A comprehensive .NET helper library providing utility functions for weather-rela
 - **IpGeoHelper**: Build sun/moon points and test API connectivity for astronomical data
 - **SunriseSunsetHelper**: Fetch sunrise/sunset and astronomical data from SunriseSunset.io — no API key required
 - **OpenStreetMapHelper**: Geocode addresses using the OpenStreetMap Nominatim API — no API key required
+- **GooglePollenHelper**: Test API keys, retrieve daily pollen forecasts (pollen types, plant info, health recommendations) from the Google Pollen API
 
 ## Installation
 
@@ -263,6 +265,45 @@ var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync(
 );
 ```
 
+### Google Pollen Helper
+
+```csharp
+using Xcalibur.Weather.Helpers.Services;
+using Microsoft.Extensions.Logging;
+
+// Test Google Pollen API key
+bool isValid = await GooglePollenHelper.TestApiKeyAsync(
+    apiKey: "your-api-key",
+    logger: logger
+);
+
+// Build pollen forecast for coordinates
+var forecast = await GooglePollenHelper.BuildPollenForecastAsync(
+    apiKey: "your-api-key",
+    latitude: "40.7128",
+    longitude: "-74.0060",
+    logger: logger
+);
+
+if (forecast?.DailyInfo is { } days)
+{
+    foreach (var day in days)
+    {
+        // Access pollen type info (Grass, Tree, Weed)
+        foreach (var pollenType in day.PollenTypeInfo ?? [])
+        {
+            Console.WriteLine($"{pollenType.DisplayName}: {pollenType.IndexInfo?.Category} (in season: {pollenType.InSeason})");
+        }
+
+        // Access plant-level detail
+        foreach (var plant in day.PlantInfo ?? [])
+        {
+            Console.WriteLine($"{plant.DisplayName}: {plant.IndexInfo?.Value} — {plant.PlantDescription?.Family}");
+        }
+    }
+}
+```
+
 ## API Overview
 
 ### ConversionHelper
@@ -311,6 +352,13 @@ var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync(
 | Method | Description |
 |--------|-------------|
 | `BuildAddressLocationsAsync(string, string, ILogger?)` | Geocodes an address query via OpenStreetMap Nominatim and returns location models — no API key required |
+
+### GooglePollenHelper
+
+| Method | Description |
+|--------|-------------|
+| `TestApiKeyAsync(string, ILogger)` | Tests the validity of a Google Pollen API key |
+| `BuildPollenForecastAsync(string, string, string, ILogger?)` | Retrieves a daily pollen forecast for the given coordinates, including pollen type info, plant info, and health recommendations |
 
 ## Best Practices
 
