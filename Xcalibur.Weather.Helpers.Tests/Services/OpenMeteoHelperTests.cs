@@ -82,7 +82,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
             {
                 // Act
                 var logger = NullLogger.Instance;
-                var point = await OpenMeteoHelper.BuildAirQualityPoint("12.34", "56.78", logger);
+                var point = await OpenMeteoHelper.BuildAirQualityPointAsync("12.34", "56.78", logger);
 
                 // Assert
                 point.Should().NotBeNull();

@@ -26,7 +26,7 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="longitude">The longitude.</param>
         /// <param name="logger">The logger.</param>
         /// <returns></returns>
-        public static async Task<AirQualityPoint?> BuildAirQualityPoint(string latitude, string longitude, ILogger logger)
+        public static async Task<AirQualityPoint?> BuildAirQualityPointAsync(string latitude, string longitude, ILogger logger)
         {
             var airQualityResponse = await GetCurrentAirQualityAsync(latitude, longitude, logger);
 

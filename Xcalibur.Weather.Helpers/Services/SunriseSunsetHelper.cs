@@ -22,7 +22,7 @@ namespace Xcalibur.Weather.Helpers.Services
         /// A populated <see cref="SunMoonPoint"/> on success; <c>null</c> on failure
         /// or when the API does not return a usable result.
         /// </returns>
-        public static async Task<SunMoonPoint?> BuildSunMoonPoint(string latitude, string longitude,
+        public static async Task<SunMoonPoint?> BuildSunMoonPointAsync(string latitude, string longitude,
             ILogger? logger = null)
         {
             var response = await GetSunriseSunsetAsync(latitude, longitude, logger);

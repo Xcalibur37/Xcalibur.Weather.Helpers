@@ -19,7 +19,7 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="longitude">The longitude.</param>
         /// <param name="logger">The logger (optional).</param>
         /// <returns></returns>
-        public static async Task<SunMoonPoint?> BuildSunMoonPoint(string ipGeoApiKey, string latitude, string longitude,
+        public static async Task<SunMoonPoint?> BuildSunMoonPointAsync(string ipGeoApiKey, string latitude, string longitude,
             ILogger? logger = null)
         {
             if (string.IsNullOrWhiteSpace(ipGeoApiKey))

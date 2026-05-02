@@ -145,7 +145,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
         public async Task BuildSunMoonPoint_ShouldReturnNull_WhenApiKeyIsEmpty()
         {
             // Act — empty key should short-circuit before any HTTP call
-            var point = await IpGeoHelper.BuildSunMoonPoint(
+            var point = await IpGeoHelper.BuildSunMoonPointAsync(
                 ipGeoApiKey: "",
                 latitude: "12.34",
                 longitude: "56.78",

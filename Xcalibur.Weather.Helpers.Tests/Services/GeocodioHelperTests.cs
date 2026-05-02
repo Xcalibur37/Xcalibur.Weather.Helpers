@@ -138,5 +138,108 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 RestoreOriginalHttpClient();
             }
         }
+
+        /// <summary>
+        /// Builds the address locations asynchronous should return null when geocodio returns a non-success status code.
+        /// </summary>
+        [Fact]
+        public async Task BuildAddressLocationsAsync_ShouldReturnNull_WhenGeocodioResponseIsNotSuccess()
+        {
+            // Arrange
+            var response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+
+            try
+            {
+                // Act
+                var locations = await GeocodioHelper.BuildAddressLocationsAsync("APIKEY", "query", "US");
+
+                // Assert
+                locations.Should().BeNull();
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
+
+        /// <summary>
+        /// Builds the address locations asynchronous should return null when geocodio returns invalid JSON.
+        /// </summary>
+        [Fact]
+        public async Task BuildAddressLocationsAsync_ShouldReturnNull_WhenGeocodioResponseIsInvalidJson()
+        {
+            // Arrange
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("not-json", Encoding.UTF8, "application/json")
+            };
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+
+            try
+            {
+                // Act
+                var locations = await GeocodioHelper.BuildAddressLocationsAsync("APIKEY", "query", "US");
+
+                // Assert
+                locations.Should().BeNull();
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
+
+        /// <summary>
+        /// Tests the API key asynchronous async should return true when the API responds successfully.
+        /// </summary>
+        [Fact]
+        public async Task TestApiKeyAsync_ShouldReturnTrue_WhenResponseIsSuccess()
+        {
+            // Arrange
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+
+            try
+            {
+                // Act
+                var isValid = await GeocodioHelper.TestApiKeyAsync("APIKEY", null);
+
+                // Assert
+                isValid.Should().BeTrue();
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
+
+        /// <summary>
+        /// Tests the API key asynchronous async should return false when the API responds with forbidden.
+        /// </summary>
+        [Fact]
+        public async Task TestApiKeyAsync_ShouldReturnFalse_WhenResponseIsForbidden()
+        {
+            // Arrange
+            var response = new HttpResponseMessage(HttpStatusCode.Forbidden);
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+
+            try
+            {
+                // Act
+                var isValid = await GeocodioHelper.TestApiKeyAsync("APIKEY", null);
+
+                // Assert
+                isValid.Should().BeFalse();
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
     }
 }

@@ -150,7 +150,7 @@ using Xcalibur.Weather.Helpers.Services;
 using Microsoft.Extensions.Logging;
 
 // Build air quality data point
-var airQuality = await OpenMeteoHelper.BuildAirQualityPoint(
+var airQuality = await OpenMeteoHelper.BuildAirQualityPointAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
     logger: logger
@@ -229,7 +229,7 @@ bool isValid = await IpGeoHelper.TestApiKeyAsync(
 );
 
 // Build sun/moon astronomical data
-var sunMoonData = await IpGeoHelper.BuildSunMoonPoint(
+var sunMoonData = await IpGeoHelper.BuildSunMoonPointAsync(
     ipGeoApiKey: "your-api-key",
     latitude: "40.7128",
     longitude: "-74.0060",
@@ -277,30 +277,19 @@ bool isValid = await GooglePollenHelper.TestApiKeyAsync(
     logger: logger
 );
 
-// Build pollen forecast for coordinates
-var forecast = await GooglePollenHelper.BuildPollenForecastAsync(
+// Build pollen summary for coordinates
+var pollen = await GooglePollenHelper.BuildPollenForecastAsync(
     apiKey: "your-api-key",
     latitude: "40.7128",
     longitude: "-74.0060",
     logger: logger
 );
 
-if (forecast?.DailyInfo is { } days)
+if (pollen is not null)
 {
-    foreach (var day in days)
-    {
-        // Access pollen type info (Grass, Tree, Weed)
-        foreach (var pollenType in day.PollenTypeInfo ?? [])
-        {
-            Console.WriteLine($"{pollenType.DisplayName}: {pollenType.IndexInfo?.Category} (in season: {pollenType.InSeason})");
-        }
-
-        // Access plant-level detail
-        foreach (var plant in day.PlantInfo ?? [])
-        {
-            Console.WriteLine($"{plant.DisplayName}: {plant.IndexInfo?.Value} — {plant.PlantDescription?.Family}");
-        }
-    }
+    Console.WriteLine($"Tree Index: {pollen.TreeIndexValue} ({pollen.TreeIndexDisplay})");
+    Console.WriteLine($"Grass Index: {pollen.GrassIndexValue} ({pollen.GrassIndexDisplay})");
+    Console.WriteLine($"Weed Index: {pollen.WeedIndexValue} ({pollen.WeedIndexDisplay})");
 }
 ```
 
@@ -321,7 +310,7 @@ if (forecast?.DailyInfo is { } days)
 
 | Method | Description |
 |--------|-------------|
-| `BuildAirQualityPoint(string, string, ILogger)` | Retrieves and builds air quality data for coordinates |
+| `BuildAirQualityPointAsync(string, string, ILogger)` | Retrieves and builds air quality data for coordinates |
 | `BuildCurrentForecast(...)` | Retrieves and builds current weather forecast point |
 | `BuildHourlyForecast(...)` | Retrieves and builds hourly forecast points |
 | `BuildDailyForecast(string, string, int, ILogger)` | Retrieves and builds daily forecast points |
@@ -339,7 +328,7 @@ if (forecast?.DailyInfo is { } days)
 | Method | Description |
 |--------|-------------|
 | `TestApiKeyAsync(string, ILogger)` | Tests the validity of an IpGeolocation API key |
-| `BuildSunMoonPoint(string, string, string, ILogger)` | Retrieves and builds sun/moon astronomical data |
+| `BuildSunMoonPointAsync(string, string, string, ILogger)` | Retrieves and builds sun/moon astronomical data |
 
 ### SunriseSunsetHelper
 
@@ -358,7 +347,7 @@ if (forecast?.DailyInfo is { } days)
 | Method | Description |
 |--------|-------------|
 | `TestApiKeyAsync(string, ILogger)` | Tests the validity of a Google Pollen API key |
-| `BuildPollenForecastAsync(string, string, string, ILogger?)` | Retrieves a daily pollen forecast for the given coordinates, including pollen type info, plant info, and health recommendations |
+| `BuildPollenForecastAsync(string, string, string, ILogger?)` | Retrieves and maps Google Pollen forecast data to a `PollenInformation` summary model |
 
 ## Best Practices
 
@@ -383,7 +372,7 @@ var forecast = await OpenMeteoHelper.BuildCurrentForecast(
 ```
 
 ### HttpClient Usage
-Service helpers internally use a shared `HttpClient` instance for optimal resource usage and connection pooling.
+Service helpers manage `HttpClient` usage internally, so callers can use the helper APIs directly without constructing provider service instances.
 
 ## Dependencies
 

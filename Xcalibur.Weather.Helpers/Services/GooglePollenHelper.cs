@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Xcalibur.Weather.Models;
 using Xcalibur.Weather.Models.WeatherProvider.GooglePollen.Forecast;
 using Xcalibur.Weather.Services.WeatherProvider.GooglePollen;
 
@@ -18,15 +19,19 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="longitude">The longitude.</param>
         /// <param name="logger">The logger (optional).</param>
         /// <returns></returns>
-        public static async Task<PollenForecastResponse?> BuildPollenForecastAsync(string apiKey, string latitude,
+        public static async Task<PollenInformation?> BuildPollenForecastAsync(string apiKey, string latitude,
             string longitude, ILogger? logger = null)
         {
-            if (!string.IsNullOrWhiteSpace(apiKey))
+            if (string.IsNullOrWhiteSpace(apiKey))
             {
-                return await GetPollenForecastAsync(apiKey, latitude, longitude, logger);
+                logger?.LogWarning("Google API key is null or empty");
+                return null;
             }
-            logger?.LogWarning("Google Pollen API key is null or empty");
-            return null;
+
+            var response =  await GetPollenForecastAsync(apiKey, latitude, longitude, logger);
+
+            // Build PollenTypeInfoModel
+            return response is null ? null : new PollenInformation(response);
 
         }
 
