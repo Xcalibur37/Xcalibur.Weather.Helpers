@@ -241,5 +241,70 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 RestoreOriginalHttpClient();
             }
         }
+
+        /// <summary>
+        /// Builds the address locations async should return multiple mapped locations when geocodio returns multiple results.
+        /// </summary>
+        [Fact]
+        public async Task BuildAddressLocationsAsync_ShouldReturnMultipleMappedLocations_WhenGeocodioReturnsMultipleResults()
+        {
+            // Arrange — two result entries
+            var json =
+                """
+                {
+                   "results": [
+                       {
+                           "address_components": {
+                               "city": "CityOne",
+                               "county": "CountyOne",
+                               "state": "CO",
+                               "zip": "11111",
+                               "country": "US"
+                           },
+                           "location": { "lat": 10.0, "lng": 20.0 }
+                       },
+                       {
+                           "address_components": {
+                               "city": "CityTwo",
+                               "county": "CountyTwo",
+                               "state": "CT",
+                               "zip": "22222",
+                               "country": "US"
+                           },
+                           "location": { "lat": 30.0, "lng": 40.0 }
+                       }
+                   ]
+                }
+                """;
+
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+
+            try
+            {
+                // Act
+                var locations = await GeocodioHelper.BuildAddressLocationsAsync("APIKEY", "query", "US");
+
+                // Assert
+                locations.Should().NotBeNull();
+                locations.Should().HaveCount(2);
+
+                locations![0].City.Should().Be("CityOne");
+                locations[0].State.Should().Be("CO");
+                locations[0].Latitude.Should().Be("10.0");
+
+                locations[1].City.Should().Be("CityTwo");
+                locations[1].State.Should().Be("CT");
+                locations[1].Latitude.Should().Be("30.0");
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
     }
 }

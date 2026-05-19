@@ -28,6 +28,7 @@ A comprehensive .NET helper library providing utility functions for weather-rela
   - [Google Pollen Helper](#google-pollen-helper)
 - [API Overview](#api-overview)
 - [Best Practices](#best-practices)
+- [Testing](#testing)
 - [Dependencies](#dependencies)
 - [License](#license)
 - [Related Projects](#related-projects)
@@ -48,6 +49,7 @@ A comprehensive .NET helper library providing utility functions for weather-rela
 - **SunriseSunsetHelper**: Fetch sunrise/sunset and astronomical data from SunriseSunset.io — no API key required
 - **OpenStreetMapHelper**: Geocode addresses using the OpenStreetMap Nominatim API — no API key required
 - **GooglePollenHelper**: Test API keys, retrieve daily pollen forecasts (pollen types, plant info, health recommendations) from the Google Pollen API
+- **GoogleWeatherAlertsHelper**: Test API keys, retrieve active weather alerts (severity, certainty, urgency, instructions, affected area polygon) from the Google Weather Alerts API
 
 ## Installation
 
@@ -244,7 +246,7 @@ using Xcalibur.Weather.Helpers.Services;
 using Microsoft.Extensions.Logging;
 
 // Build sun/moon data — no API key required
-var sunMoonData = await SunriseSunsetHelper.BuildSunMoonPoint(
+var sunMoonData = await SunriseSunsetHelper.BuildSunMoonPointAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
     logger: logger
@@ -293,6 +295,38 @@ if (pollen is not null)
 }
 ```
 
+### Google Weather Alerts Helper
+
+```csharp
+using Xcalibur.Weather.Helpers.Services;
+using Microsoft.Extensions.Logging;
+
+// Test Google Weather Alerts API key
+bool isValid = await GoogleWeatherAlertsHelper.TestApiKeyAsync(
+    apiKey: "your-api-key",
+    logger: logger
+);
+
+// Build weather alert summary for coordinates
+var alerts = await GoogleWeatherAlertsHelper.BuildWeatherAlertsAsync(
+    apiKey: "your-api-key",
+    latitude: "35.0841",
+    longitude: "-106.6510",
+    logger: logger
+);
+
+if (alerts is not null)
+{
+    Console.WriteLine($"Region: {alerts.RegionCode}");
+    foreach (var alert in alerts.Alerts)
+    {
+        Console.WriteLine($"[{alert.Severity}] {alert.Title} — {alert.AreaName}");
+        Console.WriteLine($"  Event: {alert.EventType}");
+        Console.WriteLine($"  Active: {alert.StartTime} to {alert.ExpirationTime}");
+    }
+}
+```
+
 ## API Overview
 
 ### ConversionHelper
@@ -300,9 +334,13 @@ if (pollen is not null)
 | Method | Description |
 |--------|-------------|
 | `CelsiusToFahrenheit(double)` | Converts temperature from Celsius to Fahrenheit |
+| `CelsiusToFahrenheit(double?, double)` | Converts nullable Celsius to Fahrenheit; returns `defaultValue` when null |
 | `FahrenheitToCelsius(double)` | Converts temperature from Fahrenheit to Celsius |
-| `ConvertWindSpeed(double, WindSpeedUnits)` | Converts wind speed from km/h to specified unit |
-| `FormatTemperature(double, TemperatureUnits, bool)` | Formats temperature with optional unit symbol |
+| `FahrenheitToCelsius(double?, double)` | Converts nullable Fahrenheit to Celsius; returns `defaultValue` when null |
+| `ConvertWindSpeed(double, WindSpeedUnits?)` | Converts wind speed from km/h to specified unit |
+| `ConvertWindSpeed(double?, WindSpeedUnits?)` | Converts nullable wind speed; returns `0` when null |
+| `FormatTemperature(double, TemperatureUnits?, bool)` | Formats temperature with optional unit symbol |
+| `FormatTemperature(double?, TemperatureUnits?, bool)` | Formats nullable temperature; returns empty string when null |
 | `FormatLength(double?, DistanceUnits, bool)` | Formats length/precipitation with optional unit symbol |
 | `FormatPressure(double?, BarometerUnits, bool)` | Formats pressure with optional unit symbol |
 
@@ -334,7 +372,7 @@ if (pollen is not null)
 
 | Method | Description |
 |--------|-------------|
-| `BuildSunMoonPoint(string, string, ILogger?)` | Fetches sunrise/sunset data from SunriseSunset.io and maps it to a `SunMoonPoint` — no API key required |
+| `BuildSunMoonPointAsync(string, string, ILogger?)` | Fetches sunrise/sunset data from SunriseSunset.io and maps it to a `SunMoonPoint` — no API key required |
 
 ### OpenStreetMapHelper
 
@@ -348,6 +386,42 @@ if (pollen is not null)
 |--------|-------------|
 | `TestApiKeyAsync(string, ILogger)` | Tests the validity of a Google Pollen API key |
 | `BuildPollenForecastAsync(string, string, string, ILogger?)` | Retrieves and maps Google Pollen forecast data to a `PollenInformation` summary model |
+
+### GoogleWeatherAlertsHelper
+
+| Method | Description |
+|--------|-------------|
+| `TestApiKeyAsync(string, ILogger)` | Tests the validity of a Google Weather Alerts API key |
+| `BuildWeatherAlertsAsync(string, string, string, ILogger?)` | Retrieves and maps active weather alerts to a `WeatherAlertInformation` summary model |
+
+## Testing
+
+The library ships with a comprehensive xUnit test suite covering all helpers and conversion utilities.
+
+### Test Coverage
+
+| Area | Tests | Coverage |
+|------|-------|----------|
+| `ConversionHelper` | Temperature, wind speed, length, and pressure conversions and formatting — including nullable overloads, null-unit guards, near-zero normalisation, and invalid-unit exceptions | Full public API |
+| `OpenMeteoHelper` | Air quality, current, hourly, daily, and yesterday forecasts — including absent/empty response blocks and day/night assessment | Full public API |
+| `GeocodioHelper` | Address location mapping (single and multiple results), null/empty/invalid-JSON responses, API key validation | Full public API |
+| `IpGeoHelper` | Sun/moon point mapping, null/whitespace key guards, deserialization, and HTTP error responses | Full public API |
+| `SunriseSunsetHelper` | Sun/moon point mapping, successful deserialization, HTTP error and invalid-JSON responses | Full public API |
+| `OpenStreetMapHelper` | Address location mapping, `town` fallback, empty/null/invalid-JSON/HTTP error responses | Full public API |
+| `GooglePollenHelper` | Pollen forecast deserialization (single/multiple days, pollen types, plant info with descriptions), null/whitespace key guards, HTTP error and invalid-JSON responses | Full public API |
+| `GoogleWeatherAlertsHelper` | Alert deserialization (single/multiple alerts), `WeatherAlertInformation` mapping, null/whitespace key guards, empty-alert list, HTTP error and invalid-JSON responses | Full public API |
+
+### Running the Tests
+
+```bash
+dotnet test
+```
+
+Or via the .NET CLI targeting the test project directly:
+
+```bash
+dotnet test Xcalibur.Weather.Helpers.Tests/Xcalibur.Weather.Helpers.Tests.csproj
+```
 
 ## Best Practices
 

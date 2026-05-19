@@ -395,5 +395,191 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 RestoreOriginalHttpClient();
             }
         }
+            /// <summary>
+            /// Builds the air quality point returns null when current is absent.
+            /// </summary>
+            [Fact]
+            public async Task BuildAirQualityPoint_ShouldReturnNull_WhenCurrentIsAbsent()
+            {
+                // Arrange — response with no "current" block
+                var json = """{}""";
+                var response = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+                };
+
+                ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+                try
+                {
+                    var logger = NullLogger.Instance;
+                    var point = await OpenMeteoHelper.BuildAirQualityPointAsync("0", "0", logger);
+
+                    point.Should().BeNull();
+                }
+                finally
+                {
+                    RestoreOriginalHttpClient();
+                }
+            }
+
+            /// <summary>
+            /// Builds the daily forecast returns null when daily block is absent.
+            /// </summary>
+            [Fact]
+            public async Task BuildDailyForecast_ShouldReturnNull_WhenDailyBlockAbsent()
+            {
+                // Arrange — response with no "daily" block
+                var json = """{}""";
+                var response = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+                };
+
+                ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+                try
+                {
+                    var logger = NullLogger.Instance;
+                    var points = await OpenMeteoHelper.BuildDailyForecast("0", "0", 1, logger);
+
+                    points.Should().BeNull();
+                }
+                finally
+                {
+                    RestoreOriginalHttpClient();
+                }
+            }
+
+            /// <summary>
+            /// Builds the daily forecast returns null when time array is empty.
+            /// </summary>
+            [Fact]
+            public async Task BuildDailyForecast_ShouldReturnNull_WhenTimeArrayIsEmpty()
+            {
+                // Arrange — daily block present but zero time entries
+                var json =
+                    """
+                    {
+                      "daily": {
+                        "time": [],
+                        "weather_code": [],
+                        "temperature_2m_max": [],
+                        "temperature_2m_min": [],
+                        "sunrise": [],
+                        "sunset": [],
+                        "daylight_duration": [],
+                        "sunshine_duration": [],
+                        "rain_sum": [],
+                        "showers_sum": [],
+                        "snowfall_sum": [],
+                        "precipitation_sum": [],
+                        "precipitation_hours": [],
+                        "precipitation_probability_max": [],
+                        "wind_speed_10m_max": [],
+                        "wind_gusts_10m_max": [],
+                        "uv_index_max": []
+                      }
+                    }
+                    """;
+
+                var response = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+                };
+
+                ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+                try
+                {
+                    var logger = NullLogger.Instance;
+                    var points = await OpenMeteoHelper.BuildDailyForecast("0", "0", 0, logger);
+
+                    points.Should().BeNull();
+                }
+                finally
+                {
+                    RestoreOriginalHttpClient();
+                }
+            }
+
+            /// <summary>
+            /// Builds the hourly forecast returns null when hourly block is absent.
+            /// </summary>
+            [Fact]
+            public async Task BuildHourlyForecast_ShouldReturnNull_WhenHourlyBlockAbsent()
+            {
+                // Arrange
+                var json = """{}""";
+                var response = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+                };
+
+                ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+                try
+                {
+                    var logger = NullLogger.Instance;
+                    var points = await OpenMeteoHelper.BuildHourlyForecast("0", "0", false, null, null, logger);
+
+                    points.Should().BeNull();
+                }
+                finally
+                {
+                    RestoreOriginalHttpClient();
+                }
+            }
+
+            /// <summary>
+            /// Builds the current forecast marks point as night when time falls outside sunrise/sunset window.
+            /// </summary>
+            [Fact]
+            public async Task BuildCurrentForecast_ShouldMarkNight_WhenTimeIsOutsideSunriseSunset()
+            {
+                // Arrange — time set to midnight (outside 06:00–22:00 window)
+                var timeValue = DateTime.Today.ToString("yyyy-MM-dd") + "T00:00";
+                var json =
+                    $$$"""
+                    {
+                      "current": {
+                        "time": "{{{timeValue}}}",
+                        "interval": 900,
+                        "temperature_2m": 10.0,
+                        "relative_humidity_2m": 80,
+                        "apparent_temperature": 8.0,
+                        "precipitation": 0.0,
+                        "rain": 0.0,
+                        "showers": 0.0,
+                        "snowfall": 0.0,
+                        "weather_code": 0,
+                        "cloud_cover": 0,
+                        "pressure_msl": 1015.0,
+                        "surface_pressure": 1013.0,
+                        "wind_speed_10m": 5.0,
+                        "wind_direction_10m": 90,
+                        "wind_gusts_10m": 10.0
+                      }
+                    }
+                    """;
+
+                var response = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+                };
+
+                ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+                try
+                {
+                    var logger = NullLogger.Instance;
+                    var sunrise = new TimeOnly(6, 0);
+                    var sunset = new TimeOnly(22, 0);
+
+                    var point = await OpenMeteoHelper.BuildCurrentForecast("0", "0", true, sunrise, sunset, logger);
+
+                    point.Should().NotBeNull();
+                    point!.IsDayTime.Should().BeFalse();
+                }
+                finally
+                {
+                    RestoreOriginalHttpClient();
+                }
+            }
+        }
     }
-}

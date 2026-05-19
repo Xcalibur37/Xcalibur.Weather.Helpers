@@ -166,5 +166,128 @@ namespace Xcalibur.Weather.Helpers.Tests
             // Assert
             s.Should().BeEmpty();
         }
+
+        [Fact]
+        public void CelsiusToFahrenheit_Nullable_ReturnsDefaultWhenNull()
+        {
+            // Arrange
+            double? temp = null;
+
+            // Act
+            var f = temp.CelsiusToFahrenheit(defaultValue: 99.9);
+
+            // Assert
+            f.Should().Be(99.9);
+        }
+
+        [Fact]
+        public void CelsiusToFahrenheit_Nullable_ConvertsWhenNotNull()
+        {
+            // Arrange
+            double? temp = 0.0;
+
+            // Act
+            var f = temp.CelsiusToFahrenheit();
+
+            // Assert
+            f.Should().BeApproximately(32.0, 0.0001);
+        }
+
+        [Fact]
+        public void FormatTemperature_NullUnit_ReturnsEmpty()
+        {
+            // Arrange
+            double temp = 20.0;
+
+            // Act
+            var s = temp.FormatTemperature(null, includeUnit: true);
+
+            // Assert
+            s.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void FormatTemperature_NearNegativeZero_DoesNotShowNegativeZero()
+        {
+            // Arrange — -0.4°C rounds to 0, so "-0°" must be avoided
+            double temp = -0.4;
+
+            // Act
+            var s = temp.FormatTemperature(TemperatureUnits.Celsius, includeUnit: false);
+
+            // Assert
+            s.Should().Be("0°");
+        }
+
+        [Fact]
+        public void FormatTemperature_NullableWithNullUnit_ReturnsEmpty()
+        {
+            // Arrange
+            double? temp = 15.0;
+
+            // Act
+            var s = temp.FormatTemperature(null, includeUnit: false);
+
+            // Assert
+            s.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void FormatLength_WithoutUnit_ReturnsValueOnly()
+        {
+            // Arrange
+            double? mm = 500.0;
+
+            // Act
+            var metric = mm.FormatLength(DistanceUnits.Metric, includeUnit: false);
+            var imperial = mm.FormatLength(DistanceUnits.Imperial, includeUnit: false);
+
+            // Assert
+            metric.Should().Be("500.00");
+            imperial.Should().Be("19.69");
+        }
+
+        [Fact]
+        public void FormatLength_InvalidUnit_ThrowsArgumentOutOfRangeException()
+        {
+            // Arrange
+            double? mm = 100.0;
+
+            // Act
+            var act = () => mm.FormatLength((DistanceUnits)999);
+
+            // Assert
+            act.Should().Throw<ArgumentOutOfRangeException>();
+        }
+
+        [Fact]
+        public void FormatPressure_WithoutUnit_ReturnsValueOnly()
+        {
+            // Arrange
+            double? hpa = 1013.25;
+
+            // Act
+            var hpaStr = hpa.FormatPressure(BarometerUnits.HPa, includeUnit: false);
+            var inHgStr = hpa.FormatPressure(BarometerUnits.InHg, includeUnit: false);
+            var mmHgStr = hpa.FormatPressure(BarometerUnits.MmHg, includeUnit: false);
+
+            // Assert
+            hpaStr.Should().Be("1013.25");
+            inHgStr.Should().Be("29.92");
+            mmHgStr.Should().Be("760.00");
+        }
+
+        [Fact]
+        public void FormatPressure_InvalidUnit_ThrowsArgumentOutOfRangeException()
+        {
+            // Arrange
+            double? hpa = 1013.25;
+
+            // Act
+            var act = () => hpa.FormatPressure((BarometerUnits)999);
+
+            // Assert
+            act.Should().Throw<ArgumentOutOfRangeException>();
+        }
     }
 }

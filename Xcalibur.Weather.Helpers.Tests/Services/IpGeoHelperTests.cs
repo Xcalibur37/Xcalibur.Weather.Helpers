@@ -154,5 +154,52 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
             // Assert
             point.Should().BeNull();
         }
+
+        [Fact]
+        public async Task BuildSunMoonPoint_ShouldReturnNull_WhenApiKeyIsWhiteSpace()
+        {
+            // Act — whitespace key should also short-circuit
+            var point = await IpGeoHelper.BuildSunMoonPointAsync(
+                ipGeoApiKey: "   ",
+                latitude: "12.34",
+                longitude: "56.78",
+                logger: NullLogger.Instance);
+
+            // Assert
+            point.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task IpGeoService_GetSunMoonDataAsync_ShouldReturnNull_WhenResponseIsNotSuccess()
+        {
+            // Arrange
+            var response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+            var http = new HttpClient(new DelegatingHandlerStub(response));
+            var service = new IpGeoService(http, "DUMMY_KEY", NullLogger<IpGeoService>.Instance);
+
+            // Act
+            var result = await service.GetSunMoonDataAsync("0", "0", CancellationToken.None);
+
+            // Assert
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task IpGeoService_GetSunMoonDataAsync_ShouldReturnNull_WhenResponseIsInvalidJson()
+        {
+            // Arrange
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("not-json", Encoding.UTF8, "application/json")
+            };
+            var http = new HttpClient(new DelegatingHandlerStub(response));
+            var service = new IpGeoService(http, "DUMMY_KEY", NullLogger<IpGeoService>.Instance);
+
+            // Act
+            var result = await service.GetSunMoonDataAsync("0", "0", CancellationToken.None);
+
+            // Assert
+            result.Should().BeNull();
+        }
     }
 }
