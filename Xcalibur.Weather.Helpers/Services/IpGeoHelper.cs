@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Xcalibur.Weather.Models;
-using Xcalibur.Weather.Models.WeatherProvider.IpGeo.Astronomy;
-using Xcalibur.Weather.Services.WeatherProvider.IpGeo;
+using Xcalibur.Weather.Models.Implementation.SunMoon;
+using Xcalibur.Weather.Models.Services.Astronomy.Response;
+using Xcalibur.Weather.Services;
 
 namespace Xcalibur.Weather.Helpers.Services
 {

@@ -4,7 +4,7 @@
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
 
-A comprehensive .NET helper library providing utility functions for weather-related operations. Includes conversion helpers for temperature, wind speed, length, and pressure, along with specialized helpers for Open-Meteo, Geocodio, IpGeolocation.io, Google Pollen, SunriseSunset.io, and OpenStreetMap weather data processing and transformation.
+A comprehensive .NET helper library providing utility functions for weather-related operations. Includes conversion helpers for temperature, wind speed, length, and pressure, along with specialized helpers for Open-Meteo, Geocodio, IpGeolocation.io, Atmospore, SunriseSunset.io, OpenStreetMap, and combined weather alert operations (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD).
 
 **Created by**: Joshua Arzt | **Company**: Xcalibur Systems, LLC.
 
@@ -23,9 +23,11 @@ A comprehensive .NET helper library providing utility functions for weather-rela
   - [OpenMeteo Helper](#openmeteo-helper)
   - [Geocodio Helper](#geocodio-helper)
   - [IpGeolocation Helper](#ipgeolocation-helper)
+  - [Atmospore Helper](#atmospore-helper)
   - [SunriseSunset Helper](#sunrisesunset-helper)
   - [OpenStreetMap Helper](#openstreetmap-helper)
-  - [Google Pollen Helper](#google-pollen-helper)
+  - [Weather Alert Helper](#weather-alert-helper)
+  - [Weather Region Helper](#weather-region-helper)
 - [API Overview](#api-overview)
 - [Best Practices](#best-practices)
 - [Testing](#testing)
@@ -46,10 +48,11 @@ A comprehensive .NET helper library providing utility functions for weather-rela
 - **OpenMeteoHelper**: Build air quality points, current forecasts, hourly forecasts, daily forecasts, and yesterday's data
 - **GeocodioHelper**: Test API keys, build address locations from geocoding queries
 - **IpGeoHelper**: Build sun/moon points and test API connectivity for astronomical data
+- **AtmosporeHelper**: Test API keys, retrieve pollen forecasts from the Atmospore API
 - **SunriseSunsetHelper**: Fetch sunrise/sunset and astronomical data from SunriseSunset.io — no API key required
 - **OpenStreetMapHelper**: Geocode addresses using the OpenStreetMap Nominatim API — no API key required
-- **GooglePollenHelper**: Test API keys, retrieve daily pollen forecasts (pollen types, plant info, health recommendations) from the Google Pollen API
-- **GoogleWeatherAlertsHelper**: Test API keys, retrieve active weather alerts (severity, certainty, urgency, instructions, affected area polygon) from the Google Weather Alerts API
+- **WeatherAlertHelper**: Build combined weather alert information from multiple global services (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD)
+- **WeatherRegionHelper**: Determine geographic regions, check if coordinates are in Germany, determine Canadian provinces and Australian states
 
 ## Installation
 
@@ -65,7 +68,7 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.2" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.3" />
 ```
 
 ## Requirements
@@ -155,45 +158,58 @@ using Microsoft.Extensions.Logging;
 var airQuality = await OpenMeteoHelper.BuildAirQualityPointAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
-    logger: logger
+    logger: logger,
+    cancellationToken: CancellationToken.None
 );
 
 // Build current weather forecast
-var currentForecast = await OpenMeteoHelper.BuildCurrentForecast(
+var currentForecast = await OpenMeteoHelper.BuildCurrentForecastAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
     canAssessDayNight: true,
     sunrise: new TimeOnly(6, 30),
     sunset: new TimeOnly(18, 30),
-    logger: logger
+    logger: logger,
+    cancellationToken: CancellationToken.None
 );
 
 // Build hourly forecast
-var hourlyForecast = await OpenMeteoHelper.BuildHourlyForecast(
+var hourlyForecast = await OpenMeteoHelper.BuildHourlyForecastAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
     canAssessDayNight: true,
     sunrise: new TimeOnly(6, 30),
     sunset: new TimeOnly(18, 30),
-    logger: logger
+    logger: logger,
+    cancellationToken: CancellationToken.None
 );
 
 // Build daily forecast
-var dailyForecast = await OpenMeteoHelper.BuildDailyForecast(
+var dailyForecast = await OpenMeteoHelper.BuildDailyForecastAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
     forecastDays: 7,
-    logger: logger
+    logger: logger,
+    cancellationToken: CancellationToken.None
 );
 
-// Build yesterday's forecast
-var yesterdayForecast = await OpenMeteoHelper.BuildYesterdaysForecast(
+// Build yesterday's hourly forecast
+var yesterdayHourlyForecast = await OpenMeteoHelper.BuildYesterdayHourlyForecastAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
     canAssessDayNight: true,
     sunrise: new TimeOnly(6, 30),
     sunset: new TimeOnly(18, 30),
-    logger: logger
+    logger: logger,
+    cancellationToken: CancellationToken.None
+);
+
+// Build yesterday's daily forecast
+var yesterdayDailyForecast = await OpenMeteoHelper.BuildYesterdayDailyForecastAsync(
+    latitude: "40.7128",
+    longitude: "-74.0060",
+    logger: logger,
+    cancellationToken: CancellationToken.None
 );
 ```
 
@@ -239,6 +255,38 @@ var sunMoonData = await IpGeoHelper.BuildSunMoonPointAsync(
 );
 ```
 
+### Atmospore Helper
+
+```csharp
+using Xcalibur.Weather.Helpers.Services;
+using Microsoft.Extensions.Logging;
+
+// Test Atmospore API key
+bool isValid = await AtmosporeHelper.TestApiKeyAsync(
+    apiKey: "your-api-key",
+    logger: logger
+);
+
+// Build pollen forecast
+var pollenForecast = await AtmosporeHelper.BuildPollenForecastAsync(
+    apiKey: "your-api-key",
+    latitude: "39.43",
+    longitude: "-77.80",
+    date: "2024-05-27", // Optional, defaults to today
+    forecastDays: 1,
+    logger: logger
+);
+
+if (pollenForecast is not null)
+{
+    Console.WriteLine($"Date: {pollenForecast.ForecastDate}");
+    foreach (var entry in pollenForecast.Entries)
+    {
+        Console.WriteLine($"{entry.DisplayName}: {entry.RiskLevel}");
+    }
+}
+```
+
 ### SunriseSunset Helper
 
 ```csharp
@@ -267,64 +315,69 @@ var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync(
 );
 ```
 
-### Google Pollen Helper
+### Weather Alert Helper
 
 ```csharp
 using Xcalibur.Weather.Helpers.Services;
 using Microsoft.Extensions.Logging;
 
-// Test Google Pollen API key
-bool isValid = await GooglePollenHelper.TestApiKeyAsync(
-    apiKey: "your-api-key",
+// Build combined weather alerts from multiple sources
+// (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD)
+var alerts = await WeatherAlertHelper.BuildCombinedAlertsAsync(
+    latitude: 52.52,
+    longitude: 13.41,
+    countryCode: "DE",
     logger: logger
 );
 
-// Build pollen summary for coordinates
-var pollen = await GooglePollenHelper.BuildPollenForecastAsync(
-    apiKey: "your-api-key",
-    latitude: "40.7128",
-    longitude: "-74.0060",
-    logger: logger
-);
-
-if (pollen is not null)
+if (alerts is not null && alerts.Alerts.Any())
 {
-    Console.WriteLine($"Tree Index: {pollen.TreeIndexValue} ({pollen.TreeIndexDisplay})");
-    Console.WriteLine($"Grass Index: {pollen.GrassIndexValue} ({pollen.GrassIndexDisplay})");
-    Console.WriteLine($"Weed Index: {pollen.WeedIndexValue} ({pollen.WeedIndexDisplay})");
+    Console.WriteLine($"Active Alerts: {alerts.TotalAlerts}");
+    foreach (var alert in alerts.Alerts)
+    {
+        Console.WriteLine($"[{alert.Severity}] {alert.Event}");
+        Console.WriteLine($"  Source: {alert.Source}");
+        Console.WriteLine($"  Effective: {alert.Effective}");
+        Console.WriteLine($"  Expires: {alert.Expires}");
+    }
 }
 ```
 
-### Google Weather Alerts Helper
+### Weather Region Helper
 
 ```csharp
 using Xcalibur.Weather.Helpers.Services;
-using Microsoft.Extensions.Logging;
 
-// Test Google Weather Alerts API key
-bool isValid = await GoogleWeatherAlertsHelper.TestApiKeyAsync(
-    apiKey: "your-api-key",
-    logger: logger
+// Determine geographic region
+var region = WeatherRegionHelper.DetermineRegion(
+    latitude: 52.52,
+    longitude: 13.41,
+    countryCode: "DE"
 );
 
-// Build weather alert summary for coordinates
-var alerts = await GoogleWeatherAlertsHelper.BuildWeatherAlertsAsync(
-    apiKey: "your-api-key",
-    latitude: "35.0841",
-    longitude: "-106.6510",
-    logger: logger
+Console.WriteLine($"Region: {region}"); // Output: Europe
+
+// Check if coordinates are in Germany
+bool isGermany = WeatherRegionHelper.IsInGermany(
+    latitude: 52.52,
+    longitude: 13.41
 );
 
-if (alerts is not null)
-{
-    Console.WriteLine($"Region: {alerts.RegionCode}");
-    foreach (var alert in alerts.Alerts)
-    {
-        Console.WriteLine($"[{alert.Severity}] {alert.Title} — {alert.AreaName}");
-        Console.WriteLine($"  Event: {alert.EventType}");
-        Console.WriteLine($"  Active: {alert.StartTime} to {alert.ExpirationTime}");
-    }
-}
+// Determine Canadian province
+var province = WeatherRegionHelper.DetermineCanadianProvince(
+    latitude: 43.65,
+    longitude: -79.38
+);
+
+Console.WriteLine($"Province: {province}"); // Output: ON
+
+// Determine Australian state
+var state = WeatherRegionHelper.DetermineAustralianState(
+    latitude: -33.87,
+    longitude: 151.21
+);
+
+Console.WriteLine($"State: {state}"); // Output: NSW
 ```
 
 ## API Overview
@@ -348,11 +401,12 @@ if (alerts is not null)
 
 | Method | Description |
 |--------|-------------|
-| `BuildAirQualityPointAsync(string, string, ILogger)` | Retrieves and builds air quality data for coordinates |
-| `BuildCurrentForecast(...)` | Retrieves and builds current weather forecast point |
-| `BuildHourlyForecast(...)` | Retrieves and builds hourly forecast points |
-| `BuildDailyForecast(string, string, int, ILogger)` | Retrieves and builds daily forecast points |
-| `BuildYesterdaysForecast(...)` | Retrieves and builds yesterday's hourly forecast |
+| `BuildAirQualityPointAsync(string, string, ILogger, CancellationToken)` | Retrieves and builds air quality data for coordinates |
+| `BuildCurrentForecastAsync(...)` | Retrieves and builds current weather forecast point |
+| `BuildHourlyForecastAsync(...)` | Retrieves and builds hourly forecast points |
+| `BuildDailyForecastAsync(string, string, int, ILogger, CancellationToken)` | Retrieves and builds daily forecast points |
+| `BuildYesterdayHourlyForecastAsync(...)` | Retrieves and builds yesterday's hourly forecast |
+| `BuildYesterdayDailyForecastAsync(string, string, ILogger, CancellationToken)` | Retrieves and builds yesterday's daily forecast |
 
 ### GeocodioHelper
 
@@ -368,6 +422,13 @@ if (alerts is not null)
 | `TestApiKeyAsync(string, ILogger)` | Tests the validity of an IpGeolocation API key |
 | `BuildSunMoonPointAsync(string, string, string, ILogger)` | Retrieves and builds sun/moon astronomical data |
 
+### AtmosporeHelper
+
+| Method | Description |
+|--------|-------------|
+| `TestApiKeyAsync(string, ILogger)` | Tests the validity of an Atmospore API key |
+| `BuildPollenForecastAsync(string, string, string, string?, int, ILogger?)` | Retrieves and maps Atmospore pollen forecast data to a `PollenInformation` model |
+
 ### SunriseSunsetHelper
 
 | Method | Description |
@@ -380,19 +441,27 @@ if (alerts is not null)
 |--------|-------------|
 | `BuildAddressLocationsAsync(string, string, ILogger?)` | Geocodes an address query via OpenStreetMap Nominatim and returns location models — no API key required |
 
-### GooglePollenHelper
+### WeatherAlertHelper
 
 | Method | Description |
 |--------|-------------|
-| `TestApiKeyAsync(string, ILogger)` | Tests the validity of a Google Pollen API key |
-| `BuildPollenForecastAsync(string, string, string, ILogger?)` | Retrieves and maps Google Pollen forecast data to a `PollenInformation` summary model |
+| `BuildCombinedAlertsAsync(double, double, string?, ILogger?, CancellationToken)` | Aggregates weather alerts from multiple global sources (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD) into a unified `WeatherAlertInformation` model |
+| `BuildMeteoalarmAlertsAsync(...)` | Retrieves alerts from Meteoalarm (Europe) |
+| `BuildNwsAlertsAsync(...)` | Retrieves alerts from the US National Weather Service |
+| `BuildGdacsAlertsAsync(...)` | Retrieves global disaster alerts from GDACS |
+| `BuildEnvironmentCanadaAlertsAsync(...)` | Retrieves alerts from Environment Canada |
+| `BuildBomAlertsAsync(...)` | Retrieves alerts from the Australian Bureau of Meteorology |
+| `BuildEmscAlertsAsync(...)` | Retrieves earthquake/seismic alerts from EMSC |
+| `BuildDwdAlertsAsync(...)` | Retrieves alerts from the German weather service (DWD) |
 
-### GoogleWeatherAlertsHelper
+### WeatherRegionHelper
 
 | Method | Description |
 |--------|-------------|
-| `TestApiKeyAsync(string, ILogger)` | Tests the validity of a Google Weather Alerts API key |
-| `BuildWeatherAlertsAsync(string, string, string, ILogger?)` | Retrieves and maps active weather alerts to a `WeatherAlertInformation` summary model |
+| `DetermineRegion(double, double, string?)` | Determines the geographic region (US, Canada, Europe, Australia, Other) based on coordinates and optional country code |
+| `IsInGermany(double, double)` | Checks if coordinates fall within German geographic bounds |
+| `DetermineCanadianProvince(double, double)` | Returns the two-letter Canadian province code for the given coordinates |
+| `DetermineAustralianState(double, double)` | Returns the Australian state code for the given coordinates |
 
 ## Testing
 
@@ -408,8 +477,9 @@ The library ships with a comprehensive xUnit test suite covering all helpers and
 | `IpGeoHelper` | Sun/moon point mapping, null/whitespace key guards, deserialization, and HTTP error responses | Full public API |
 | `SunriseSunsetHelper` | Sun/moon point mapping, successful deserialization, HTTP error and invalid-JSON responses | Full public API |
 | `OpenStreetMapHelper` | Address location mapping, `town` fallback, empty/null/invalid-JSON/HTTP error responses | Full public API |
-| `GooglePollenHelper` | Pollen forecast deserialization (single/multiple days, pollen types, plant info with descriptions), null/whitespace key guards, HTTP error and invalid-JSON responses | Full public API |
-| `GoogleWeatherAlertsHelper` | Alert deserialization (single/multiple alerts), `WeatherAlertInformation` mapping, null/whitespace key guards, empty-alert list, HTTP error and invalid-JSON responses | Full public API |
+| `AtmosporeHelper` | Pollen forecast deserialization, API key validation, null/whitespace guards, HTTP error and invalid-JSON responses | Full public API |
+| `WeatherAlertHelper` | Combined alert aggregation, individual source helpers (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD), cancellation behavior | Full public API |
+| `WeatherRegionHelper` | Region determination (US, Canada, Europe, Australia), Germany bounds check, Canadian province detection, Australian state detection | Full public API |
 
 ### Running the Tests
 

@@ -1,38 +1,40 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Xcalibur.Weather.Models;
-using Xcalibur.Weather.Models.WeatherProvider.GooglePollen.Forecast;
-using Xcalibur.Weather.Services.WeatherProvider.GooglePollen;
+using Xcalibur.Weather.Models.Implementation.Pollen;
+using Xcalibur.Weather.Models.Services.Atmospore.Response;
+using Xcalibur.Weather.Services;
 
 namespace Xcalibur.Weather.Helpers.Services
 {
     /// <summary>
-    /// Helper class for Google Pollen related operations.
+    /// Helper class for Atmospore pollen related operations.
     /// </summary>
-    public static class GooglePollenHelper
+    public static class AtmosporeHelper
     {
         /// <summary>
-        /// Builds the pollen forecast.
+        /// Builds the pollen forecast from the Atmospore API.
         /// </summary>
         /// <param name="apiKey">The API key.</param>
         /// <param name="latitude">The latitude.</param>
         /// <param name="longitude">The longitude.</param>
+        /// <param name="date">The forecast date (yyyy-MM-dd). Defaults to today if null or empty.</param>
+        /// <param name="forecastDays">The number of forecast days.</param>
         /// <param name="logger">The logger (optional).</param>
         /// <returns></returns>
         public static async Task<PollenInformation?> BuildPollenForecastAsync(string apiKey, string latitude,
-            string longitude, ILogger? logger = null)
+            string longitude, string? date = null, int forecastDays = 1, ILogger? logger = null)
         {
             if (string.IsNullOrWhiteSpace(apiKey))
             {
-                logger?.LogWarning("Google API key is null or empty");
+                logger?.LogWarning("Atmospore API key is null or empty");
                 return null;
             }
 
-            var response =  await GetPollenForecastAsync(apiKey, latitude, longitude, logger);
+            // If date is null or empty, the API will default to today's date, so we can pass it as is.
+            var response = await GetPollenForecastAsync(apiKey, latitude, longitude, date, forecastDays, logger);
 
-            // Build PollenTypeInfoModel
+            // If the response is null, it means there was an error or no data, so we return null.
             return response is null ? null : new PollenInformation(response);
-
         }
 
         /// <summary>
@@ -48,43 +50,45 @@ namespace Xcalibur.Weather.Helpers.Services
             // Use a short timeout so the caller is not blocked indefinitely.
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 
-            // Validate the API key against the Google Pollen endpoint.
+            // The TestApiKey method will return true if the API key is valid, false otherwise.
             return await service.TestApiKey(cts.Token);
         }
 
         /// <summary>
-        /// Gets the pollen forecast data.
+        /// Gets the pollen forecast data from the Atmospore API.
         /// </summary>
         /// <param name="apiKey">The API key.</param>
         /// <param name="latitude">The latitude.</param>
         /// <param name="longitude">The longitude.</param>
+        /// <param name="date">The forecast date (yyyy-MM-dd). Defaults to today if null or empty.</param>
+        /// <param name="forecastDays">The number of forecast days.</param>
         /// <param name="logger">The logger.</param>
         /// <returns></returns>
-        private static async Task<PollenForecastResponse?> GetPollenForecastAsync(string apiKey, string latitude,
-            string longitude, ILogger? logger)
+        private static async Task<PollenResponse?> GetPollenForecastAsync(string apiKey, string latitude,
+            string longitude, string? date, int forecastDays, ILogger? logger)
         {
             var service = CreateService(apiKey, logger);
 
             // Use a short timeout so the caller is not blocked indefinitely.
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 
-            // Fetch the pollen forecast for the given coordinates.
-            return await service.GetPollenForecastAsync(latitude, longitude, cts.Token);
+            // The GetPollenForecastAsync method will return the pollen forecast data or null if there was an error.
+            return await service.GetPollenForecastAsync(latitude, longitude, date, forecastDays, cts.Token);
         }
 
         /// <summary>
-        /// Creates the service.
+        /// Creates the Atmospore service.
         /// </summary>
         /// <param name="apiKey">The API key.</param>
         /// <param name="logger">The logger.</param>
         /// <returns></returns>
-        private static GooglePollenService CreateService(string apiKey, ILogger? logger)
+        private static AtmosporeService CreateService(string apiKey, ILogger? logger)
         {
             var http = new HttpClient();
             var serviceLogger = logger != null
-                ? new LoggerFactory().CreateLogger<GooglePollenService>()
-                : NullLogger<GooglePollenService>.Instance;
-            return new GooglePollenService(http, apiKey, serviceLogger);
+                ? new LoggerFactory().CreateLogger<AtmosporeService>()
+                : NullLogger<AtmosporeService>.Instance;
+            return new AtmosporeService(http, apiKey, serviceLogger);
         }
     }
 }

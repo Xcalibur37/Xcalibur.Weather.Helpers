@@ -1,4 +1,4 @@
-﻿using Xcalibur.Weather.Models;
+﻿using Xcalibur.Weather.Models.Implementation;
 
 namespace Xcalibur.Weather.Helpers;
 
@@ -173,6 +173,24 @@ public static class ConversionHelper
             _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, "Invalid distance unit.")
         };
     }
+
+    /// <summary>
+    /// Formats the length value.
+    /// </summary>
+    /// <param name="value">The value.</param>
+    /// <param name="unit">The unit.</param>
+    /// <returns></returns>
+    public static double? FormatLengthValue(this double? value, DistanceUnits unit)
+    {
+        if (!value.HasValue) return 0;
+        return unit switch
+        {
+            DistanceUnits.Metric => value,
+            DistanceUnits.Imperial => value * MillimetersToInches,
+            _ => throw new ArgumentOutOfRangeException(nameof(unit), unit, "Invalid distance unit.")
+        };
+    }
+
 
     #endregion
 

@@ -2,11 +2,10 @@ using System.Net;
 using System.Text;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
-using Xcalibur.Weather.Helpers.Services;
-using Xcalibur.Weather.Models;
+using Xcalibur.Weather.Models.Implementation.SunMoon;
+using Xcalibur.Weather.Models.Services.Astronomy.Response;
 using Xcalibur.Weather.Models.Testing;
-using Xcalibur.Weather.Models.WeatherProvider.SunriseSunset;
-using Xcalibur.Weather.Services.WeatherProvider.SunriseSunset;
+using Xcalibur.Weather.Services;
 
 namespace Xcalibur.Weather.Helpers.Tests.Services
 {
@@ -16,10 +15,10 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
     public sealed class SunriseSunsetHelperTests
     {
         [Fact]
-        public void SunMoonPoint_ShouldMapValues_FromSunriseSunsetResultModel()
+        public void SunMoonPoint_ShouldMapValues_FromSunriseSunsetResultResponse()
         {
             // Arrange
-            var result = new SunriseSunsetResultModel
+            var result = new SunriseSunsetResultResponse
             {
                 Sunrise = "6:14:04 AM",
                 Sunset = "8:05:25 PM",

@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Xcalibur.Weather.Models;
-using Xcalibur.Weather.Models.WeatherProvider.Geocodio;
-using Xcalibur.Weather.Services.WeatherProvider.Geocodio;
+using Xcalibur.Weather.Models.Implementation.Geocoding;
+using Xcalibur.Weather.Models.Services.Geocodio.Response;
+using Xcalibur.Weather.Services;
 
 namespace Xcalibur.Weather.Helpers.Services
 {

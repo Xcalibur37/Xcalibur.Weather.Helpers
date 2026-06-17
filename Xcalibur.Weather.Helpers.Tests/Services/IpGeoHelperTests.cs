@@ -1,12 +1,12 @@
-﻿using System.Net;
+using System.Net;
 using System.Text;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xcalibur.Weather.Helpers.Services;
-using Xcalibur.Weather.Models;
 using Xcalibur.Weather.Models.Testing;
-using Xcalibur.Weather.Models.WeatherProvider.IpGeo.Astronomy;
-using Xcalibur.Weather.Services.WeatherProvider.IpGeo;
+using Xcalibur.Weather.Models.Implementation.SunMoon;
+using Xcalibur.Weather.Models.Services.Astronomy.Response;
+using Xcalibur.Weather.Services;
 
 namespace Xcalibur.Weather.Helpers.Tests.Services
 {
@@ -22,10 +22,10 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
     public sealed class IpGeoHelperTests
     {
         [Fact]
-        public void SunMoonPoint_ShouldMapValues_FromAstronomyModel()
+        public void SunMoonPoint_ShouldMapValues_FromAstronomyResponse()
         {
-            // Arrange - create an AstronomyModel with representative values
-            var astronomy = new AstronomyModel
+            // Arrange - create an AstronomyResponse with representative values
+            var astronomy = new AstronomyResponse
             {
                 Sunrise = "06:00",
                 Sunset = "18:00",

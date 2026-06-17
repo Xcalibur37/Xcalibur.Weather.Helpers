@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Xcalibur.Weather.Models;
-using Xcalibur.Weather.Models.WeatherProvider.OpenStreetMap;
-using Xcalibur.Weather.Services.WeatherProvider.OpenStreetMap;
+using Xcalibur.Weather.Models.Implementation.Geocoding;
+using Xcalibur.Weather.Models.Services.OpenStreetMap.Response;
+using Xcalibur.Weather.Services;
 
 namespace Xcalibur.Weather.Helpers.Services
 {
@@ -51,7 +51,7 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="country">The country.</param>
         /// <param name="logger">The logger.</param>
         /// <returns></returns>
-        private static async Task<List<OpenStreetMapResult>?> GetLocationsAsync(string query, string country, ILogger? logger)
+        private static async Task<List<OpenStreetMapResultResponse>?> GetLocationsAsync(string query, string country, ILogger? logger)
         {
             // Create a new service instance for each call to ensure thread safety, but reuse the shared HttpClient.
             var service = CreateService(logger);

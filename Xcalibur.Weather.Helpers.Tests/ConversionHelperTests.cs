@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using Xcalibur.Weather.Models;
+using Xcalibur.Weather.Models.Implementation;
 
 namespace Xcalibur.Weather.Helpers.Tests
 {
@@ -285,6 +285,58 @@ namespace Xcalibur.Weather.Helpers.Tests
 
             // Act
             var act = () => hpa.FormatPressure((BarometerUnits)999);
+
+            // Assert
+            act.Should().Throw<ArgumentOutOfRangeException>();
+        }
+
+        [Fact]
+        public void FormatLengthValue_Metric_ReturnsOriginalValue()
+        {
+            // Arrange
+            double? mm = 250.0;
+
+            // Act
+            var result = mm.FormatLengthValue(DistanceUnits.Metric);
+
+            // Assert
+            result.Should().Be(250.0);
+        }
+
+        [Fact]
+        public void FormatLengthValue_Imperial_ConvertsToInches()
+        {
+            // Arrange
+            double? mm = 254.0; // ~10 inches
+
+            // Act
+            var result = mm.FormatLengthValue(DistanceUnits.Imperial);
+
+            // Assert
+            result.Should().BeApproximately(10.0, 0.01);
+        }
+
+        [Fact]
+        public void FormatLengthValue_NullValue_ReturnsZero()
+        {
+            // Arrange
+            double? mm = null;
+
+            // Act
+            var result = mm.FormatLengthValue(DistanceUnits.Metric);
+
+            // Assert
+            result.Should().Be(0);
+        }
+
+        [Fact]
+        public void FormatLengthValue_InvalidUnit_ThrowsArgumentOutOfRangeException()
+        {
+            // Arrange
+            double? mm = 100.0;
+
+            // Act
+            var act = () => mm.FormatLengthValue((DistanceUnits)999);
 
             // Assert
             act.Should().Throw<ArgumentOutOfRangeException>();

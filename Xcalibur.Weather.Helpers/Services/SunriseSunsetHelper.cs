@@ -1,7 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Xcalibur.Weather.Models;
-using Xcalibur.Weather.Services.WeatherProvider.SunriseSunset;
+using Xcalibur.Weather.Models.Implementation.SunMoon;
+using Xcalibur.Weather.Models.Services.Astronomy.Response;
+using Xcalibur.Weather.Services;
 
 namespace Xcalibur.Weather.Helpers.Services
 {
@@ -13,19 +14,20 @@ namespace Xcalibur.Weather.Helpers.Services
     {
         /// <summary>
         /// Fetches sun and moon data from SunriseSunset.io and maps the result
-        /// to a <see cref="SunMoonPoint"/>.
+        /// to a <see cref="SunMoonPoint" />.
         /// </summary>
         /// <param name="latitude">The latitude.</param>
         /// <param name="longitude">The longitude.</param>
         /// <param name="logger">The logger (optional).</param>
+        /// <param name="token">The cancellation token.</param>
         /// <returns>
-        /// A populated <see cref="SunMoonPoint"/> on success; <c>null</c> on failure
+        /// A populated <see cref="SunMoonPoint" /> on success; <c>null</c> on failure
         /// or when the API does not return a usable result.
         /// </returns>
         public static async Task<SunMoonPoint?> BuildSunMoonPointAsync(string latitude, string longitude,
-            ILogger? logger = null)
+            ILogger? logger = null, CancellationToken token = default)
         {
-            var response = await GetSunriseSunsetAsync(latitude, longitude, logger);
+            var response = await GetSunriseSunsetAsync(latitude, longitude, logger, token);
             if (response?.Results is null) return null;
 
             return new SunMoonPoint(response.Results);
@@ -34,12 +36,16 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <summary>
         /// Calls the SunriseSunset.io API and returns the raw response.
         /// </summary>
-        private static async Task<Models.WeatherProvider.SunriseSunset.SunriseSunsetResponse?> GetSunriseSunsetAsync(
-            string latitude, string longitude, ILogger? logger)
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns></returns>
+        private static async Task<SunriseSunsetResponse?> GetSunriseSunsetAsync(
+            string latitude, string longitude, ILogger? logger, CancellationToken token)
         {
             var service = CreateService(logger);
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            return await service.GetSunriseSunsetAsync(latitude, longitude, cts.Token);
+            return await service.GetSunriseSunsetAsync(latitude, longitude, token);
         }
 
         /// <summary>
