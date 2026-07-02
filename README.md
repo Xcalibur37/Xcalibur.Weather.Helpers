@@ -68,7 +68,7 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.3" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.8" />
 ```
 
 ## Requirements
@@ -323,11 +323,14 @@ using Microsoft.Extensions.Logging;
 
 // Build combined weather alerts from multiple sources
 // (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD)
+// Intelligently selects services based on geographic location
 var alerts = await WeatherAlertHelper.BuildCombinedAlertsAsync(
-    latitude: 52.52,
-    longitude: 13.41,
-    countryCode: "DE",
-    logger: logger
+    latitude: "52.52",
+    longitude: "13.41",
+    logger: logger,
+    token: CancellationToken.None,
+    provinceCode: null,  // Optional: for Canada (e.g., "ON", "BC")
+    stateCode: null      // Optional: for Australia (e.g., "NSW", "VIC")
 );
 
 if (alerts is not null && alerts.Alerts.Any())
@@ -341,6 +344,59 @@ if (alerts is not null && alerts.Alerts.Any())
         Console.WriteLine($"  Expires: {alert.Expires}");
     }
 }
+
+// Build alerts from specific services
+var meteoalarmAlerts = await WeatherAlertHelper.BuildMeteoalarmAlertsAsync(
+    latitude: "52.52",
+    longitude: "13.41",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+var nwsAlerts = await WeatherAlertHelper.BuildNwsAlertsAsync(
+    latitude: "40.7128",
+    longitude: "-74.0060",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+var gdacsAlerts = await WeatherAlertHelper.BuildGdacsAlertsAsync(
+    latitude: "35.6762",
+    longitude: "139.6503",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+var canadaAlerts = await WeatherAlertHelper.BuildEnvironmentCanadaAlertsAsync(
+    latitude: "43.65",
+    longitude: "-79.38",
+    provinceCode: "ON",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+var bomAlerts = await WeatherAlertHelper.BuildBomAlertsAsync(
+    latitude: "-33.87",
+    longitude: "151.21",
+    stateCode: "NSW",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+var dwdAlerts = await WeatherAlertHelper.BuildDwdAlertsAsync(
+    latitude: "52.52",
+    longitude: "13.41",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+var emscAlerts = await WeatherAlertHelper.BuildEmscAlertsAsync(
+    latitude: "40.7128",
+    longitude: "-74.0060",
+    radiusKm: 500,
+    logger: logger,
+    token: CancellationToken.None
+);
 ```
 
 ### Weather Region Helper
@@ -348,11 +404,10 @@ if (alerts is not null && alerts.Alerts.Any())
 ```csharp
 using Xcalibur.Weather.Helpers.Services;
 
-// Determine geographic region
+// Determine geographic region from coordinates
 var region = WeatherRegionHelper.DetermineRegion(
     latitude: 52.52,
-    longitude: 13.41,
-    countryCode: "DE"
+    longitude: 13.41
 );
 
 Console.WriteLine($"Region: {region}"); // Output: Europe
@@ -363,7 +418,7 @@ bool isGermany = WeatherRegionHelper.IsInGermany(
     longitude: 13.41
 );
 
-// Determine Canadian province
+// Determine Canadian province from coordinates
 var province = WeatherRegionHelper.DetermineCanadianProvince(
     latitude: 43.65,
     longitude: -79.38
@@ -371,7 +426,7 @@ var province = WeatherRegionHelper.DetermineCanadianProvince(
 
 Console.WriteLine($"Province: {province}"); // Output: ON
 
-// Determine Australian state
+// Determine Australian state from coordinates
 var state = WeatherRegionHelper.DetermineAustralianState(
     latitude: -33.87,
     longitude: 151.21
@@ -445,20 +500,20 @@ Console.WriteLine($"State: {state}"); // Output: NSW
 
 | Method | Description |
 |--------|-------------|
-| `BuildCombinedAlertsAsync(double, double, string?, ILogger?, CancellationToken)` | Aggregates weather alerts from multiple global sources (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD) into a unified `WeatherAlertInformation` model |
-| `BuildMeteoalarmAlertsAsync(...)` | Retrieves alerts from Meteoalarm (Europe) |
-| `BuildNwsAlertsAsync(...)` | Retrieves alerts from the US National Weather Service |
-| `BuildGdacsAlertsAsync(...)` | Retrieves global disaster alerts from GDACS |
-| `BuildEnvironmentCanadaAlertsAsync(...)` | Retrieves alerts from Environment Canada |
-| `BuildBomAlertsAsync(...)` | Retrieves alerts from the Australian Bureau of Meteorology |
-| `BuildEmscAlertsAsync(...)` | Retrieves earthquake/seismic alerts from EMSC |
-| `BuildDwdAlertsAsync(...)` | Retrieves alerts from the German weather service (DWD) |
+| `BuildCombinedAlertsAsync(string, string, ILogger, CancellationToken, string?, string?)` | Aggregates weather alerts from multiple global sources (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD) into a unified `CombinedWeatherAlertInformation` model. Intelligently selects services based on geographic location. Optional `provinceCode` for Canada and `stateCode` for Australia. |
+| `BuildMeteoalarmAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves alerts from Meteoalarm (Europe) |
+| `BuildNwsAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves alerts from the US National Weather Service |
+| `BuildGdacsAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves global disaster alerts from GDACS |
+| `BuildEnvironmentCanadaAlertsAsync(string, string, string, ILogger, CancellationToken)` | Retrieves alerts from Environment Canada (requires province code) |
+| `BuildBomAlertsAsync(string, string, string, ILogger, CancellationToken)` | Retrieves alerts from the Australian Bureau of Meteorology (requires state code) |
+| `BuildEmscAlertsAsync(string, string, int, ILogger, CancellationToken)` | Retrieves earthquake/seismic alerts from EMSC within specified radius (in km) |
+| `BuildDwdAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves alerts from the German weather service (DWD) |
 
 ### WeatherRegionHelper
 
 | Method | Description |
 |--------|-------------|
-| `DetermineRegion(double, double, string?)` | Determines the geographic region (US, Canada, Europe, Australia, Other) based on coordinates and optional country code |
+| `DetermineRegion(double, double)` | Determines the geographic region (US, Canada, Europe, Australia, Other) based on coordinates |
 | `IsInGermany(double, double)` | Checks if coordinates fall within German geographic bounds |
 | `DetermineCanadianProvince(double, double)` | Returns the two-letter Canadian province code for the given coordinates |
 | `DetermineAustralianState(double, double)` | Returns the Australian state code for the given coordinates |

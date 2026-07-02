@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Xcalibur.Weather.Models.Implementation.WeatherAlerts;
+using Xcalibur.Weather.Models.Services.WeatherAlert.Base;
 using Xcalibur.Weather.Models.Services.WeatherAlert.Bom;
 using Xcalibur.Weather.Models.Services.WeatherAlert.Dwd;
 using Xcalibur.Weather.Models.Services.WeatherAlert.Emsc;
@@ -12,14 +13,21 @@ using Xcalibur.Weather.Services;
 namespace Xcalibur.Weather.Helpers.Services
 {
     /// <summary>
-    /// Helper class for combined weather alert operations (Meteoalarm + NWS + GDACS + Environment Canada + BOM).
+    /// Helper class for combined weather alert operations
+    /// Meteoalarm, NWS, GDACS, Environment Canada, BOM, DWD, EMSC).
     /// </summary>
     public static class WeatherAlertHelper
     {
+        #region Members
+
         private static HttpClient _sharedHttpClient = new()
         {
             Timeout = TimeSpan.FromSeconds(30)
         };
+
+        #endregion
+
+        #region Combined Alerts
 
         /// <summary>
         /// Builds combined weather alert information from all relevant services based on location.
@@ -33,35 +41,34 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="stateCode">Optional: State/territory code for Australia (e.g., 'nsw', 'vic'). If null, will be determined from coordinates if in Australia.</param>
         /// <returns>Combined weather alert information or null if no alerts are available.</returns>
         public static async Task<CombinedWeatherAlertInformation?> BuildCombinedAlertsAsync(
-            string latitude,
-            string longitude,
-            ILogger logger,
-            CancellationToken token,
-            string? provinceCode = null,
-            string? stateCode = null)
+            string latitude, string longitude, ILogger logger, CancellationToken token, string? provinceCode = null, string? stateCode = null)
         {
+            // Validate coordinates
             if (!double.TryParse(latitude, out var lat) || !double.TryParse(longitude, out var lon))
             {
                 logger.LogWarning("Invalid coordinates provided: ({Latitude}, {Longitude})", latitude, longitude);
                 return null;
             }
 
+            // Determine the region based on coordinates
             var region = WeatherRegionHelper.DetermineRegion(lat, lon);
             logger.LogDebug("Detected region: {Region} for coordinates ({Latitude}, {Longitude})", region, latitude, longitude);
 
-            MeteoalarmResponse? meteoalarm = null;
+            // Initialize response objects
+            MeteoalarmAlertsResponse? meteoalarm = null;
             NwsAlertsResponse? nws = null;
-            GdacsResponse? gdacs = null;
-            EnvironmentCanadaResponse? envCanada = null;
+            GdacsAlertsResponse? gdacs = null;
+            EnvironmentCanadaAlertsResponse? envCanada = null;
             BomAlertsResponse? bom = null;
-            EmscResponse? emsc = null;
             DwdAlertsResponse? dwd = null;
-
-            var tasks = new List<Task>();
+            EmscAlertsResponse? emsc = null;
 
             // Global services - always call these
-            tasks.Add(Task.Run(async () => gdacs = await GetGdacsAlertsAsync(latitude, longitude, logger, token), token));
-            tasks.Add(Task.Run(async () => emsc = await GetEmscAlertsAsync(latitude, longitude, 500, logger, token), token));
+            var tasks = new List<Task>
+            {
+                Task.Run(async () => gdacs = await GetGdacsAlertsAsync(latitude, longitude, logger, token), token),
+                Task.Run(async () => emsc = await GetEmscAlertsAsync(latitude, longitude, 500, logger, token), token)
+            };
 
             // Regional services - call based on location
             switch (region)
@@ -106,18 +113,24 @@ namespace Xcalibur.Weather.Helpers.Services
                     break;
             }
 
+            // Wait for all tasks to complete
             await Task.WhenAll(tasks);
 
             // Check if we got any results
-            if (meteoalarm is null && nws is null && gdacs is null && envCanada is null && bom is null && emsc is null && dwd is null)
+            var alertResponses = new BaseAlertsResponse?[] { meteoalarm, nws, gdacs, envCanada, bom, dwd, emsc };
+            if (alertResponses.All(static response => response is null))
             {
                 logger.LogDebug("No alerts available from any service for ({Latitude}, {Longitude})", latitude, longitude);
                 return null;
-            }
+            } 
 
             // Construct combined alert information
             return new CombinedWeatherAlertInformation(meteoalarm, nws, gdacs, envCanada, bom, emsc, dwd, latitude, longitude);
         }
+
+        #endregion
+
+        #region Meteoalarm Alerts
 
         /// <summary>
         /// Builds weather alerts from Meteoalarm only.
@@ -128,73 +141,21 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="token">The cancellation token.</param>
         /// <returns>Combined weather alert information with Meteoalarm data only.</returns>
         public static async Task<CombinedWeatherAlertInformation?> BuildMeteoalarmAlertsAsync(
-            string latitude,
-            string longitude,
-            ILogger logger,
-            CancellationToken token)
+            string latitude, string longitude, ILogger logger, CancellationToken token)
         {
+            // Get Meteoalarm alerts for the given coordinates
             var meteoalarm = await GetMeteoalarmAlertsAsync(latitude, longitude, logger, token);
 
+            // If Meteoalarm alerts are found, return them in a CombinedWeatherAlertInformation object
             if (meteoalarm is null)
             {
-                logger.LogDebug("No Meteoalarm alerts available for ({Latitude}, {Longitude})",
-                    latitude, longitude);
+                logger.LogDebug("No Meteoalarm alerts available for ({Latitude}, {Longitude})", latitude, longitude);
                 return null;
             }
 
+            // Return a CombinedWeatherAlertInformation object with only Meteoalarm data populated
             return new CombinedWeatherAlertInformation(meteoalarm, null, null, null, null, null, null, latitude, longitude);
-        }
 
-        /// <summary>
-        /// Builds weather alerts from NWS only.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>Combined weather alert information with NWS data only.</returns>
-        public static async Task<CombinedWeatherAlertInformation?> BuildNwsAlertsAsync(
-            string latitude,
-            string longitude,
-            ILogger logger,
-            CancellationToken token)
-        {
-            var nws = await GetNwsAlertsAsync(latitude, longitude, logger, token);
-
-            if (nws is null)
-            {
-                logger.LogDebug("No NWS alerts available for ({Latitude}, {Longitude})",
-                    latitude, longitude);
-                return null;
-            }
-
-            return new CombinedWeatherAlertInformation(null, nws, null, null, null, null, null, latitude, longitude);
-        }
-
-        /// <summary>
-        /// Builds weather alerts from GDACS only.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>Combined weather alert information with GDACS data only.</returns>
-        public static async Task<CombinedWeatherAlertInformation?> BuildGdacsAlertsAsync(
-            string latitude,
-            string longitude,
-            ILogger logger,
-            CancellationToken token)
-        {
-            var gdacs = await GetGdacsAlertsAsync(latitude, longitude, logger, token);
-
-            if (gdacs is null)
-            {
-                logger.LogDebug("No GDACS alerts available for ({Latitude}, {Longitude})",
-                    latitude, longitude);
-                return null;
-            }
-
-            return new CombinedWeatherAlertInformation(null, null, gdacs, null, null, null, null, latitude, longitude);
         }
 
         /// <summary>
@@ -205,14 +166,39 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="logger">The logger.</param>
         /// <param name="token">The cancellation token.</param>
         /// <returns>Meteoalarm response or null.</returns>
-        private static async Task<MeteoalarmResponse?> GetMeteoalarmAlertsAsync(
-            string latitude,
-            string longitude,
-            ILogger logger,
-            CancellationToken token)
+        private static async Task<MeteoalarmAlertsResponse?> GetMeteoalarmAlertsAsync(
+            string latitude, string longitude, ILogger logger, CancellationToken token)
+            => await new WeatherAlertService(_sharedHttpClient, logger).GetMeteoalarmAlertsAsync(latitude, longitude, token);
+
+        #endregion
+
+        #region NWS Alerts
+
+        /// <summary>
+        /// Builds weather alerts from NWS only.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>Combined weather alert information with NWS data only.</returns>
+        public static async Task<CombinedWeatherAlertInformation?> BuildNwsAlertsAsync(
+            string latitude, string longitude, ILogger logger, CancellationToken token)
         {
-            var service = new WeatherAlertService(_sharedHttpClient, logger);
-            return await service.GetMeteoalarmAlertsAsync(latitude, longitude, token);
+            // Get NWS alerts for the given coordinates
+            var nws = await GetNwsAlertsAsync(latitude, longitude, logger, token);
+
+            // If NWS alerts are found, return them in a CombinedWeatherAlertInformation object
+            if (nws is null)
+            {
+                logger.LogDebug("No NWS alerts available for ({Latitude}, {Longitude})",
+                    latitude, longitude);
+                return null;
+            }
+
+            // Return a CombinedWeatherAlertInformation object with only NWS data populated
+            return new CombinedWeatherAlertInformation(null, nws, null, null, null, null, null, latitude, longitude);
+
         }
 
         /// <summary>
@@ -224,13 +210,38 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="token">The cancellation token.</param>
         /// <returns>NWS alerts response or null.</returns>
         private static async Task<NwsAlertsResponse?> GetNwsAlertsAsync(
-            string latitude,
-            string longitude,
-            ILogger logger,
-            CancellationToken token)
+            string latitude, string longitude, ILogger logger, CancellationToken token)
+            => await new WeatherAlertService(_sharedHttpClient, logger).GetNwsAlertsAsync(latitude, longitude, token);
+
+        #endregion
+
+        #region GDACS Alerts
+
+        /// <summary>
+        /// Builds weather alerts from GDACS only.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>Combined weather alert information with GDACS data only.</returns>
+        public static async Task<CombinedWeatherAlertInformation?> BuildGdacsAlertsAsync(
+            string latitude, string longitude, ILogger logger, CancellationToken token)
         {
-            var service = new WeatherAlertService(_sharedHttpClient, logger);
-            return await service.GetNwsAlertsAsync(latitude, longitude, token);
+            // Log the start of the GDACS alert building process with the provided coordinates
+            var gdacs = await GetGdacsAlertsAsync(latitude, longitude, logger, token);
+
+            // If GDACS alerts are found, return them in a CombinedWeatherAlertInformation object
+            if (gdacs is null)
+            {
+                logger.LogDebug("No GDACS alerts available for ({Latitude}, {Longitude})",
+                    latitude, longitude);
+                return null;
+            }
+
+            // Log that no GDACS alerts were found for the given coordinates
+            return new CombinedWeatherAlertInformation(null, null, gdacs, null, null, null, null, latitude, longitude);
+
         }
 
         /// <summary>
@@ -241,15 +252,13 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="logger">The logger.</param>
         /// <param name="token">The cancellation token.</param>
         /// <returns>GDACS response or null.</returns>
-        private static async Task<GdacsResponse?> GetGdacsAlertsAsync(
-            string latitude,
-            string longitude,
-            ILogger logger,
-            CancellationToken token)
-        {
-            var service = new WeatherAlertService(_sharedHttpClient, logger);
-            return await service.GetGdacsAlertsAsync(latitude, longitude, token);
-        }
+        private static async Task<GdacsAlertsResponse?> GetGdacsAlertsAsync(
+            string latitude, string longitude, ILogger logger, CancellationToken token)
+            => await new WeatherAlertService(_sharedHttpClient, logger).GetGdacsAlertsAsync(latitude, longitude, token);
+
+        #endregion
+
+        #region Environment Canada Alerts
 
         /// <summary>
         /// Builds weather alerts from Environment Canada only.
@@ -261,50 +270,21 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="token">The cancellation token.</param>
         /// <returns>Combined weather alert information with Environment Canada data only.</returns>
         public static async Task<CombinedWeatherAlertInformation?> BuildEnvironmentCanadaAlertsAsync(
-            string latitude,
-            string longitude,
-            string provinceCode,
-            ILogger logger,
-            CancellationToken token)
+            string latitude, string longitude, string provinceCode, ILogger logger, CancellationToken token)
         {
             var envCanada = await GetEnvironmentCanadaAlertsAsync(latitude, longitude, provinceCode, logger, token);
 
-            if (envCanada is null)
+            if (envCanada is not null)
             {
-                logger.LogDebug("No Environment Canada alerts available for ({Latitude}, {Longitude}) in province {ProvinceCode}",
-                    latitude, longitude, provinceCode);
-                return null;
+                return new CombinedWeatherAlertInformation(null, null, null, envCanada, null, null, null, latitude,
+                    longitude);
             }
 
-            return new CombinedWeatherAlertInformation(null, null, null, envCanada, null, null, null, latitude, longitude);
-        }
+            // Log that no Environment Canada alerts were found for the given coordinates and province
+            logger.LogDebug("No Environment Canada alerts available for ({Latitude}, {Longitude}) in province {ProvinceCode}",
+                latitude, longitude, provinceCode);
+            return null;
 
-        /// <summary>
-        /// Builds weather alerts from BOM Australia only.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="stateCode">The state/territory code (e.g., 'nsw', 'vic', 'qld').</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>Combined weather alert information with BOM data only.</returns>
-        public static async Task<CombinedWeatherAlertInformation?> BuildBomAlertsAsync(
-            string latitude,
-            string longitude,
-            string stateCode,
-            ILogger logger,
-            CancellationToken token)
-        {
-            var bom = await GetBomAlertsAsync(latitude, longitude, stateCode, logger, token);
-
-            if (bom is null)
-            {
-                logger.LogDebug("No BOM alerts available for ({Latitude}, {Longitude}) in state {StateCode}",
-                    latitude, longitude, stateCode);
-                return null;
-            }
-
-            return new CombinedWeatherAlertInformation(null, null, null, null, bom, null, null, latitude, longitude);
         }
 
         /// <summary>
@@ -316,15 +296,41 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="logger">The logger.</param>
         /// <param name="token">The cancellation token.</param>
         /// <returns>Environment Canada response or null.</returns>
-        private static async Task<EnvironmentCanadaResponse?> GetEnvironmentCanadaAlertsAsync(
-            string latitude,
-            string longitude,
-            string provinceCode,
-            ILogger logger,
-            CancellationToken token)
+        private static async Task<EnvironmentCanadaAlertsResponse?> GetEnvironmentCanadaAlertsAsync(
+            string latitude, string longitude, string provinceCode, ILogger logger, CancellationToken token)
+            => await new WeatherAlertService(_sharedHttpClient, logger).GetEnvironmentCanadaAlertsAsync(latitude, longitude, provinceCode, token);
+
+        #endregion
+
+        #region BOM Alerts
+
+        /// <summary>
+        /// Builds weather alerts from BOM Australia only.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="stateCode">The state/territory code (e.g., 'nsw', 'vic', 'qld').</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>Combined weather alert information with BOM data only.</returns>
+        public static async Task<CombinedWeatherAlertInformation?> BuildBomAlertsAsync(
+            string latitude, string longitude, string stateCode, ILogger logger, CancellationToken token)
         {
-            var service = new WeatherAlertService(_sharedHttpClient, logger);
-            return await service.GetEnvironmentCanadaAlertsAsync(latitude, longitude, provinceCode, token);
+            // Get BOM alerts for the given coordinates and state
+            var bom = await GetBomAlertsAsync(latitude, longitude, stateCode, logger, token);
+
+            // If BOM alerts are found, return them in a CombinedWeatherAlertInformation object
+            if (bom is not null)
+            {
+                return new CombinedWeatherAlertInformation(null, null, null, null, bom, null, null, latitude,
+                    longitude);
+            }
+
+            // Log that no BOM alerts were found for the given coordinates and state
+            logger.LogDebug("No BOM alerts available for ({Latitude}, {Longitude}) in state {StateCode}",
+                latitude, longitude, stateCode);
+            return null;
+
         }
 
         /// <summary>
@@ -337,38 +343,12 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="token">The cancellation token.</param>
         /// <returns>BOM alerts response or null.</returns>
         private static async Task<BomAlertsResponse?> GetBomAlertsAsync(
-            string latitude,
-            string longitude,
-            string stateCode,
-            ILogger logger,
-            CancellationToken token)
-        {
-            var service = new WeatherAlertService(_sharedHttpClient, logger);
-            return await service.GetBomAlertsAsync(latitude, longitude, stateCode, token);
-        }
+            string latitude, string longitude, string stateCode, ILogger logger, CancellationToken token)
+            => await new WeatherAlertService(_sharedHttpClient, logger).GetBomAlertsAsync(latitude, longitude, stateCode, token);
 
-        /// <summary>
-        /// Builds earthquake alert information from EMSC (European-Mediterranean Seismological Centre).
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="radiusKm">The search radius in kilometers (default: 500).</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>EMSC alerts response or null.</returns>
-        public static async Task<EmscResponse?> BuildEmscAlertsAsync(
-            string latitude,
-            string longitude,
-            int radiusKm,
-            ILogger logger,
-            CancellationToken token)
-        {
-            logger.LogInformation("Building EMSC earthquake alerts for ({Latitude}, {Longitude}) within {Radius}km",
-                latitude, longitude, radiusKm);
+        #endregion
 
-            var emscAlerts = await GetEmscAlertsAsync(latitude, longitude, radiusKm, logger, token);
-            return emscAlerts;
-        }
+        #region DWD Alerts
 
         /// <summary>
         /// Builds weather warning information from DWD (Deutscher Wetterdienst - German Weather Service).
@@ -379,36 +359,13 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="token">The cancellation token.</param>
         /// <returns>DWD alerts response or null.</returns>
         public static async Task<DwdAlertsResponse?> BuildDwdAlertsAsync(
-            string latitude,
-            string longitude,
-            ILogger logger,
-            CancellationToken token)
+            string latitude, string longitude, ILogger logger, CancellationToken token)
         {
-            logger.LogInformation("Building DWD weather warnings for ({Latitude}, {Longitude})",
-                latitude, longitude);
+            // Log the start of the DWD alert building process with the provided coordinates
+            logger.LogInformation("Building DWD weather warnings for ({Latitude}, {Longitude})", latitude, longitude);
 
-            var dwdAlerts = await GetDwdAlertsAsync(latitude, longitude, logger, token);
-            return dwdAlerts;
-        }
-
-        /// <summary>
-        /// Gets alerts from EMSC API only.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="radiusKm">The search radius in kilometers.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>EMSC alerts response or null.</returns>
-        private static async Task<EmscResponse?> GetEmscAlertsAsync(
-            string latitude,
-            string longitude,
-            int radiusKm,
-            ILogger logger,
-            CancellationToken token)
-        {
-            var service = new WeatherAlertService(_sharedHttpClient, logger);
-            return await service.GetEmscAlertsAsync(latitude, longitude, radiusKm, token);
+            // Call the private method to get DWD alerts and return the result
+            return await GetDwdAlertsAsync(latitude, longitude, logger, token);
         }
 
         /// <summary>
@@ -420,14 +377,46 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="token">The cancellation token.</param>
         /// <returns>DWD alerts response or null.</returns>
         private static async Task<DwdAlertsResponse?> GetDwdAlertsAsync(
-            string latitude,
-            string longitude,
-            ILogger logger,
-            CancellationToken token)
+            string latitude, string longitude, ILogger logger, CancellationToken token)
+            => await new WeatherAlertService(_sharedHttpClient, logger).GetDwdAlertsAsync(latitude, longitude, token);
+
+        #endregion
+
+        #region EMSC Alerts
+
+        /// <summary>
+        /// Builds earthquake alert information from EMSC (European-Mediterranean Seismological Centre).
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="radiusKm">The search radius in kilometers (default: 500).</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>EMSC alerts response or null.</returns>
+        public static async Task<EmscAlertsResponse?> BuildEmscAlertsAsync(
+            string latitude, string longitude, int radiusKm, ILogger logger, CancellationToken token)
         {
-            var service = new WeatherAlertService(_sharedHttpClient, logger);
-            return await service.GetDwdAlertsAsync(latitude, longitude, token);
+            // Log the start of the EMSC alert building process with the provided coordinates and radius
+            logger.LogInformation("Building EMSC earthquake alerts for ({Latitude}, {Longitude}) within {Radius}km", latitude, longitude, radiusKm);
+
+            // Call the private method to get EMSC alerts and return the result
+            return await GetEmscAlertsAsync(latitude, longitude, radiusKm, logger, token);
         }
+
+        /// <summary>
+        /// Gets alerts from EMSC API only.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="radiusKm">The search radius in kilometers.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>EMSC alerts response or null.</returns>
+        private static async Task<EmscAlertsResponse?> GetEmscAlertsAsync(
+            string latitude, string longitude, int radiusKm, ILogger logger, CancellationToken token)
+            => await new WeatherAlertService(_sharedHttpClient, logger).GetEmscAlertsAsync(latitude, longitude, radiusKm, token);
+
+        #endregion
     }
 }
 
