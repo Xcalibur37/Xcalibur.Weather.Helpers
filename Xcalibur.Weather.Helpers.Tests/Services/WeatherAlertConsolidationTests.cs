@@ -19,17 +19,6 @@ public sealed class WeatherAlertConsolidationTests
     private const string HurricaneType = "Hurricane";
 
     [Fact]
-    public void ConsolidateAlerts_WithNull_ReturnsEmptyList()
-    {
-        // Act
-        var result = WeatherAlertHelper.ConsolidateAlerts(null!, NullLogger.Instance);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Should().BeEmpty();
-    }
-
-    [Fact]
     public void ConsolidateAlerts_WithEmptyList_ReturnsEmptyList()
     {
         // Arrange

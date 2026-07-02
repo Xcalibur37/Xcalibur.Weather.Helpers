@@ -426,6 +426,20 @@ var canadaAlerts = await WeatherAlertHelper.BuildEnvironmentCanadaAlertsAsync(
     token: CancellationToken.None
 );
 
+// Environment Canada with automatic consolidation (for Canadian locations)
+var canadaConsolidated = await WeatherAlertHelper.BuildEnvironmentCanadaAlertsConsolidatedAsync(
+    latitude: "43.65",
+    longitude: "-79.38",
+    provinceCode: "ON",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+foreach (var alert in canadaConsolidated)
+{
+    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
+}
+
 var bomAlerts = await WeatherAlertHelper.BuildBomAlertsAsync(
     latitude: "-33.87",
     longitude: "151.21",
@@ -434,12 +448,79 @@ var bomAlerts = await WeatherAlertHelper.BuildBomAlertsAsync(
     token: CancellationToken.None
 );
 
+// BOM with automatic consolidation (for Australian locations)
+var bomConsolidated = await WeatherAlertHelper.BuildBomAlertsConsolidatedAsync(
+    latitude: "-33.87",
+    longitude: "151.21",
+    stateCode: "NSW",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+foreach (var alert in bomConsolidated)
+{
+    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
+}
+
+var meteoalarmAlerts = await WeatherAlertHelper.BuildMeteoalarmAlertsAsync(
+    latitude: "52.52",
+    longitude: "13.41",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+// Meteoalarm with automatic consolidation (for European locations)
+var meteoalarmConsolidated = await WeatherAlertHelper.BuildMeteoalarmAlertsConsolidatedAsync(
+    latitude: "52.52",
+    longitude: "13.41",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+foreach (var alert in meteoalarmConsolidated)
+{
+    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
+}
+
+var gdacsAlerts = await WeatherAlertHelper.BuildGdacsAlertsAsync(
+    latitude: "35.6762",
+    longitude: "139.6503",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+// GDACS with automatic consolidation (for global disaster alerts)
+var gdacsConsolidated = await WeatherAlertHelper.BuildGdacsAlertsConsolidatedAsync(
+    latitude: "35.6762",
+    longitude: "139.6503",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+foreach (var alert in gdacsConsolidated)
+{
+    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
+}
+
 var dwdAlerts = await WeatherAlertHelper.BuildDwdAlertsAsync(
     latitude: "52.52",
     longitude: "13.41",
     logger: logger,
     token: CancellationToken.None
 );
+
+// DWD with automatic consolidation (for German locations)
+var dwdConsolidated = await WeatherAlertHelper.BuildDwdAlertsConsolidatedAsync(
+    latitude: "52.52",
+    longitude: "13.41",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+foreach (var alert in dwdConsolidated)
+{
+    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
+}
 
 var emscAlerts = await WeatherAlertHelper.BuildEmscAlertsAsync(
     latitude: "40.7128",
@@ -448,6 +529,20 @@ var emscAlerts = await WeatherAlertHelper.BuildEmscAlertsAsync(
     logger: logger,
     token: CancellationToken.None
 );
+
+// EMSC with automatic consolidation (for earthquake/seismic alerts)
+var emscConsolidated = await WeatherAlertHelper.BuildEmscAlertsConsolidatedAsync(
+    latitude: "40.7128",
+    longitude: "-74.0060",
+    radiusKm: 500,
+    logger: logger,
+    token: CancellationToken.None
+);
+
+foreach (var alert in emscConsolidated)
+{
+    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
+}
 ```
 
 ### Weather Region Helper
@@ -555,13 +650,19 @@ Console.WriteLine($"State: {state}"); // Output: NSW
 | `BuildCombinedAlertsConsolidatedAsync(...)` | **Recommended for UI display.** Returns only the consolidated alerts list, removing overlapping duplicates and keeping the highest severity alert from each group. Returns an empty list if no alerts exist. Clean, simple API. |
 | `ConsolidateAlerts(IEnumerable<WeatherAlertItem>, ILogger?)` | Consolidates a collection of alerts by removing overlapping duplicates and keeping the highest severity alert from each group. Use this for manual consolidation when you need access to the full `CombinedWeatherAlertInformation` object. |
 | `BuildMeteoalarmAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves alerts from Meteoalarm (Europe) |
+| `BuildMeteoalarmAlertsConsolidatedAsync(string, string, ILogger, CancellationToken)` | **Recommended for Europe.** Retrieves alerts from Meteoalarm with automatic consolidation. Returns a list of unique, consolidated alerts. |
 | `BuildNwsAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves alerts from the US National Weather Service |
-| `BuildNwsAlertsConsolidatedAsync(string, string, ILogger, CancellationToken)` | Retrieves alerts from NWS with automatic consolidation. Returns a list of unique, consolidated alerts. |
+| `BuildNwsAlertsConsolidatedAsync(string, string, ILogger, CancellationToken)` | **Recommended for US.** Retrieves alerts from NWS with automatic consolidation. Returns a list of unique, consolidated alerts. |
 | `BuildGdacsAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves global disaster alerts from GDACS |
+| `BuildGdacsAlertsConsolidatedAsync(string, string, ILogger, CancellationToken)` | **Recommended for global disasters.** Retrieves alerts from GDACS with automatic consolidation. Returns a list of unique, consolidated alerts. |
 | `BuildEnvironmentCanadaAlertsAsync(string, string, string, ILogger, CancellationToken)` | Retrieves alerts from Environment Canada (requires province code) |
+| `BuildEnvironmentCanadaAlertsConsolidatedAsync(string, string, string, ILogger, CancellationToken)` | **Recommended for Canada.** Retrieves alerts from Environment Canada with automatic consolidation. Returns a list of unique, consolidated alerts. |
 | `BuildBomAlertsAsync(string, string, string, ILogger, CancellationToken)` | Retrieves alerts from the Australian Bureau of Meteorology (requires state code) |
-| `BuildEmscAlertsAsync(string, string, int, ILogger, CancellationToken)` | Retrieves earthquake/seismic alerts from EMSC within specified radius (in km) |
+| `BuildBomAlertsConsolidatedAsync(string, string, string, ILogger, CancellationToken)` | **Recommended for Australia.** Retrieves alerts from BOM with automatic consolidation. Returns a list of unique, consolidated alerts. |
 | `BuildDwdAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves alerts from the German weather service (DWD) |
+| `BuildDwdAlertsConsolidatedAsync(string, string, ILogger, CancellationToken)` | **Recommended for Germany.** Retrieves alerts from DWD with automatic consolidation. Returns a list of unique, consolidated alerts. |
+| `BuildEmscAlertsAsync(string, string, int, ILogger, CancellationToken)` | Retrieves earthquake/seismic alerts from EMSC within specified radius (in km) |
+| `BuildEmscAlertsConsolidatedAsync(string, string, int, ILogger, CancellationToken)` | **Recommended for earthquakes.** Retrieves alerts from EMSC with automatic consolidation. Returns a list of unique, consolidated alerts. |
 
 ### WeatherRegionHelper
 
