@@ -1,6 +1,6 @@
 # Xcalibur.Weather.Helpers
 
-![Version](https://img.shields.io/badge/version-1.0.9-blue)
+![Version](https://img.shields.io/badge/version-1.0.10-blue)
 ![.NET Version](https://img.shields.io/badge/.NET-10.0-blue)
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
@@ -8,6 +8,39 @@
 A comprehensive .NET helper library providing utility functions for weather-related operations. Includes conversion helpers for temperature, wind speed, length, and pressure, along with specialized helpers for Open-Meteo, Geocodio, IpGeolocation.io, Atmospore, SunriseSunset.io, OpenStreetMap, and combined weather alert operations (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD).
 
 **Created by**: Joshua Arzt | **Company**: Xcalibur Systems, LLC.
+
+## 🎉 What's New in v1.0.10
+
+**Consolidated Weather Alert Methods** - A complete suite of consolidated alert methods for cleaner, more efficient alert handling:
+
+- ✅ **All 7 providers now have consolidated versions**: NWS, Meteoalarm, Environment Canada, BOM, GDACS, DWD, and EMSC
+- ✅ **Automatic duplicate removal**: Overlapping alerts of the same event type are consolidated, keeping only the highest severity
+- ✅ **Clean, simple API**: Returns `IReadOnlyList<WeatherAlertItem>` directly - no tuples, no null checks needed
+- ✅ **Optimized for UI display**: Perfect for weather apps that need to show unique, relevant alerts without duplicates
+- ✅ **Smart consolidation**: Handles escalating alerts (e.g., Winter Weather Advisory → Winter Storm Warning) intelligently
+
+**Example:**
+```csharp
+// Old way - might show duplicate alerts for the same weather event
+var alerts = await WeatherAlertHelper.BuildNwsAlertsAsync(lat, lon, logger, token);
+
+// New way - automatically consolidated, unique alerts only
+var consolidated = await WeatherAlertHelper.BuildNwsAlertsConsolidatedAsync(lat, lon, logger, token);
+foreach (var alert in consolidated)
+{
+    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
+}
+```
+
+**Available Consolidated Methods:**
+- `BuildCombinedAlertsConsolidatedAsync` - All providers combined
+- `BuildNwsAlertsConsolidatedAsync` - US weather alerts
+- `BuildMeteoalarmAlertsConsolidatedAsync` - European alerts
+- `BuildEnvironmentCanadaAlertsConsolidatedAsync` - Canadian alerts
+- `BuildBomAlertsConsolidatedAsync` - Australian alerts
+- `BuildGdacsAlertsConsolidatedAsync` - Global disaster alerts
+- `BuildDwdAlertsConsolidatedAsync` - German weather warnings
+- `BuildEmscAlertsConsolidatedAsync` - Earthquake/seismic alerts
 
 ## 📋 Table of Contents
 
@@ -33,6 +66,7 @@ A comprehensive .NET helper library providing utility functions for weather-rela
 - [Best Practices](#best-practices)
 - [Testing](#testing)
 - [Dependencies](#dependencies)
+- [Changelog](#changelog)
 - [License](#license)
 - [Related Projects](#related-projects)
 
@@ -733,6 +767,33 @@ Service helpers manage `HttpClient` usage internally, so callers can use the hel
 This library depends on:
 - [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.8) - Weather service providers and models
 - [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) (v10.0.9) - Hosting abstractions
+
+## Changelog
+
+### Version 1.0.10 (Latest)
+- ✨ **New**: Added consolidated alert methods for all 7 weather alert providers
+  - `BuildCombinedAlertsConsolidatedAsync` - Multi-provider consolidated alerts
+  - `BuildNwsAlertsConsolidatedAsync` - US National Weather Service
+  - `BuildMeteoalarmAlertsConsolidatedAsync` - European weather alerts
+  - `BuildEnvironmentCanadaAlertsConsolidatedAsync` - Canadian weather alerts
+  - `BuildBomAlertsConsolidatedAsync` - Australian Bureau of Meteorology
+  - `BuildGdacsAlertsConsolidatedAsync` - Global disaster alerts
+  - `BuildDwdAlertsConsolidatedAsync` - German weather warnings
+  - `BuildEmscAlertsConsolidatedAsync` - Earthquake/seismic alerts
+- 🔄 **Improved**: Automatic consolidation of overlapping alerts by event type and severity
+- 🎯 **Optimized**: Clean API design returning `IReadOnlyList<WeatherAlertItem>` for easier consumption
+- 📚 **Documentation**: Comprehensive examples for all consolidated methods
+- ✅ **Testing**: 23 new tests covering all consolidated alert scenarios
+
+### Version 1.0.9
+- 📝 Updated README with version information
+- 🔧 Minor improvements and bug fixes
+
+### Version 1.0.8
+- 🌍 Comprehensive weather alert support (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD)
+- 🛠️ Helper utilities for Open-Meteo, Geocodio, IpGeolocation, Atmospore, SunriseSunset, OpenStreetMap
+- 🔄 Conversion helpers for temperature, wind speed, length, and pressure
+- 📍 Geographic region detection and routing
 
 ## License
 
