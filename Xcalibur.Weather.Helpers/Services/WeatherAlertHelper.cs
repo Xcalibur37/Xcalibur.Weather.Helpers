@@ -41,7 +41,12 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="stateCode">Optional: State/territory code for Australia (e.g., 'nsw', 'vic'). If null, will be determined from coordinates if in Australia.</param>
         /// <returns>Combined weather alert information or null if no alerts are available.</returns>
         public static async Task<CombinedWeatherAlertInformation?> BuildCombinedAlertsAsync(
-            string latitude, string longitude, ILogger logger, CancellationToken token, string? provinceCode = null, string? stateCode = null)
+            string latitude, 
+            string longitude, 
+            ILogger logger, 
+            CancellationToken token, 
+            string? provinceCode = null, 
+            string? stateCode = null)
         {
             // Validate coordinates
             if (!double.TryParse(latitude, out var lat) || !double.TryParse(longitude, out var lon))
@@ -128,6 +133,54 @@ namespace Xcalibur.Weather.Helpers.Services
             return new CombinedWeatherAlertInformation(meteoalarm, nws, gdacs, envCanada, bom, emsc, dwd, latitude, longitude);
         }
 
+        /// <summary>
+        /// Builds combined weather alert information and returns consolidated alerts.
+        /// This is a convenience method that fetches alerts and automatically consolidates overlapping alerts
+        /// of the same event type, keeping only the highest severity from each group.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <param name="provinceCode">Optional: Province/territory code for Canada (e.g., 'on', 'bc'). If null, will be determined from coordinates if in Canada.</param>
+        /// <param name="stateCode">Optional: State/territory code for Australia (e.g., 'nsw', 'vic'). If null, will be determined from coordinates if in Australia.</param>
+        /// <returns>
+        /// A consolidated list of weather alerts with overlapping duplicates removed.
+        /// Returns an empty list if no alerts are available.
+        /// </returns>
+        /// <example>
+        /// <code>
+        /// var alerts = await WeatherAlertHelper.BuildCombinedAlertsConsolidatedAsync(
+        ///     "39.4300996", "-77.804161", logger, cancellationToken);
+        /// 
+        /// foreach (var alert in alerts)
+        /// {
+        ///     Console.WriteLine($"[{alert.Severity}] {alert.Event}");
+        /// }
+        /// </code>
+        /// </example>
+        public static async Task<IReadOnlyList<WeatherAlertItem>> BuildCombinedAlertsConsolidatedAsync(
+            string latitude,
+            string longitude,
+            ILogger logger,
+            CancellationToken token,
+            string? provinceCode = null,
+            string? stateCode = null)
+        {
+            // Get combined alerts
+            var combined = await BuildCombinedAlertsAsync(latitude, longitude, logger, token, provinceCode, stateCode);
+
+            // If no alerts are available, return empty list
+            if (combined is null || !combined.Alerts.Any())
+            {
+                logger.LogDebug("No alerts available for consolidation");
+                return Array.Empty<WeatherAlertItem>();
+            }
+
+            // Consolidate overlapping alerts and return
+            return ConsolidateAlerts(combined.Alerts, logger);
+        }
+
         #endregion
 
         #region Meteoalarm Alerts
@@ -199,6 +252,32 @@ namespace Xcalibur.Weather.Helpers.Services
             // Return a CombinedWeatherAlertInformation object with only NWS data populated
             return new CombinedWeatherAlertInformation(null, nws, null, null, null, null, null, latitude, longitude);
 
+        }
+
+        /// <summary>
+        /// Builds weather alerts from NWS and returns consolidated alerts.
+        /// This is a convenience method for NWS-only alerts that automatically consolidates
+        /// overlapping alerts of the same event type.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns>
+        /// A consolidated list of NWS weather alerts with overlapping duplicates removed.
+        /// Returns an empty list if no alerts are available.
+        /// </returns>
+        public static async Task<IReadOnlyList<WeatherAlertItem>> BuildNwsAlertsConsolidatedAsync(
+            string latitude, string longitude, ILogger logger, CancellationToken token)
+        {
+            var combined = await BuildNwsAlertsAsync(latitude, longitude, logger, token);
+
+            if (combined is null || !combined.Alerts.Any())
+            {
+                return Array.Empty<WeatherAlertItem>();
+            }
+
+            return ConsolidateAlerts(combined.Alerts, logger);
         }
 
         /// <summary>
@@ -415,6 +494,180 @@ namespace Xcalibur.Weather.Helpers.Services
         private static async Task<EmscAlertsResponse?> GetEmscAlertsAsync(
             string latitude, string longitude, int radiusKm, ILogger logger, CancellationToken token)
             => await new WeatherAlertService(_sharedHttpClient, logger).GetEmscAlertsAsync(latitude, longitude, radiusKm, token);
+
+        #endregion
+
+        #region Alert Consolidation
+
+        /// <summary>
+        /// Consolidates overlapping alerts by keeping the highest severity alert from each group.
+        /// Groups alerts that share the same event type and have overlapping effective periods.
+        /// This is useful when weather services issue multiple escalating alerts for the same phenomenon
+        /// (e.g., Winter Weather Advisory → Winter Storm Watch → Winter Storm Warning).
+        /// </summary>
+        /// <param name="alerts">The collection of weather alerts to consolidate.</param>
+        /// <param name="logger">Optional logger for diagnostic information.</param>
+        /// <returns>A consolidated list of alerts with duplicates removed, keeping the highest severity from each overlapping group.</returns>
+        /// <remarks>
+        /// This method uses a lightweight algorithm that:
+        /// - Groups alerts by event type (e.g., all winter weather alerts together)
+        /// - Within each group, identifies alerts with overlapping time periods
+        /// - Keeps only the highest severity alert from each overlapping group
+        /// - Preserves all other unique alerts
+        /// 
+        /// Time complexity: O(n²) where n is the number of alerts (typically small, 1-10 alerts)
+        /// Space complexity: O(n)
+        /// 
+        /// Usage:
+        /// <code>
+        /// var consolidatedAlerts = WeatherAlertHelper.ConsolidateAlerts(
+        ///     alerts.Alerts, 
+        ///     logger
+        /// );
+        /// </code>
+        /// </remarks>
+        public static IReadOnlyList<Models.Implementation.WeatherAlerts.WeatherAlertItem> ConsolidateAlerts(
+            IEnumerable<Models.Implementation.WeatherAlerts.WeatherAlertItem> alerts, 
+            ILogger? logger = null)
+        {
+            var alertsList = alerts?.ToList() ?? new List<Models.Implementation.WeatherAlerts.WeatherAlertItem>();
+
+            if (alertsList.Count <= 1)
+            {
+                return alertsList;
+            }
+
+            logger?.LogDebug("Consolidating {Count} alerts", alertsList.Count);
+
+            // Track which alerts to keep (by index)
+            var alertsToKeep = new HashSet<int>();
+
+            // Group alerts by event type for efficient comparison
+            var eventGroups = alertsList
+                .Select((alert, index) => new { Alert = alert, Index = index })
+                .GroupBy(x => x.Alert.EventType)
+                .ToList();
+
+            foreach (var eventGroup in eventGroups)
+            {
+                var groupAlerts = eventGroup.ToList();
+
+                // If only one alert in this event type group, keep it
+                if (groupAlerts.Count == 1)
+                {
+                    alertsToKeep.Add(groupAlerts[0].Index);
+                    continue;
+                }
+
+                // Track which alerts have been processed in this group
+                var processedInGroup = new HashSet<int>();
+
+                foreach (var current in groupAlerts)
+                {
+                    if (processedInGroup.Contains(current.Index))
+                    {
+                        continue;
+                    }
+
+                    // Find all alerts that overlap with this one
+                    var overlappingGroup = new List<(Models.Implementation.WeatherAlerts.WeatherAlertItem Alert, int Index)>
+                    {
+                        (current.Alert, current.Index)
+                    };
+
+                    foreach (var other in groupAlerts)
+                    {
+                        if (other.Index == current.Index || processedInGroup.Contains(other.Index))
+                        {
+                            continue;
+                        }
+
+                        // Check if alerts overlap in time
+                        if (AreAlertsOverlapping(current.Alert, other.Alert))
+                        {
+                            overlappingGroup.Add((other.Alert, other.Index));
+                            processedInGroup.Add(other.Index);
+                        }
+                    }
+
+                    // Keep the highest severity alert from the overlapping group
+                    var highestSeverity = overlappingGroup
+                        .OrderByDescending(x => GetSeverityRank(x.Alert.Severity))
+                        .ThenByDescending(x => x.Alert.Effective) // Most recent if same severity
+                        .First();
+
+                    alertsToKeep.Add(highestSeverity.Index);
+                    processedInGroup.Add(current.Index);
+
+                    if (overlappingGroup.Count > 1)
+                    {
+                        logger?.LogDebug(
+                            "Consolidated {Count} overlapping '{EventType}' alerts, keeping highest severity: {Severity} - {Event}",
+                            overlappingGroup.Count,
+                            current.Alert.EventType,
+                            highestSeverity.Alert.Severity,
+                            highestSeverity.Alert.Event);
+                    }
+                }
+            }
+
+            // Create consolidated list
+            var consolidatedAlerts = alertsToKeep
+                .OrderBy(x => x)
+                .Select(index => alertsList[index])
+                .ToList();
+
+            if (consolidatedAlerts.Count < alertsList.Count)
+            {
+                logger?.LogInformation(
+                    "Consolidated {OriginalCount} alerts down to {ConsolidatedCount} unique alerts",
+                    alertsList.Count,
+                    consolidatedAlerts.Count);
+            }
+            else
+            {
+                logger?.LogDebug("No consolidation needed - all alerts are unique");
+            }
+
+            return consolidatedAlerts;
+        }
+
+        /// <summary>
+        /// Determines if two alerts overlap in their effective time periods.
+        /// </summary>
+        private static bool AreAlertsOverlapping(
+            Models.Implementation.WeatherAlerts.WeatherAlertItem alert1,
+            Models.Implementation.WeatherAlerts.WeatherAlertItem alert2)
+        {
+            // If either alert doesn't have time information, assume no overlap
+            if (!alert1.Effective.HasValue || !alert2.Effective.HasValue)
+            {
+                return false;
+            }
+
+            var start1 = alert1.Effective.Value;
+            var end1 = alert1.Expires ?? DateTime.MaxValue;
+            var start2 = alert2.Effective.Value;
+            var end2 = alert2.Expires ?? DateTime.MaxValue;
+
+            // Check if time ranges overlap
+            return start1 < end2 && start2 < end1;
+        }
+
+        /// <summary>
+        /// Returns a numeric rank for alert severity (higher = more severe).
+        /// </summary>
+        private static int GetSeverityRank(Models.Implementation.WeatherAlerts.AlertSeverity severity)
+        {
+            return severity switch
+            {
+                Models.Implementation.WeatherAlerts.AlertSeverity.Extreme => 4,
+                Models.Implementation.WeatherAlerts.AlertSeverity.Severe => 3,
+                Models.Implementation.WeatherAlerts.AlertSeverity.Moderate => 2,
+                Models.Implementation.WeatherAlerts.AlertSeverity.Minor => 1,
+                _ => 0
+            };
+        }
 
         #endregion
     }

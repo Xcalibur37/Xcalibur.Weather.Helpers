@@ -1,6 +1,6 @@
 # Xcalibur.Weather.Helpers
 
-![Version](https://img.shields.io/badge/version-1.0.8-blue)
+![Version](https://img.shields.io/badge/version-1.0.9-blue)
 ![.NET Version](https://img.shields.io/badge/.NET-10.0-blue)
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
@@ -346,6 +346,42 @@ if (alerts is not null && alerts.Alerts.Any())
     }
 }
 
+// BUILD WITH AUTOMATIC CONSOLIDATION (Recommended for UI display)
+// Automatically consolidates overlapping alerts (e.g., Winter Weather Advisory + Winter Storm Warning)
+// Keeps only the highest severity alert from each overlapping group
+var consolidatedAlerts = await WeatherAlertHelper.BuildCombinedAlertsConsolidatedAsync(
+    latitude: "39.4300996",
+    longitude: "-77.804161",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+// Simple and clean - just iterate the results
+foreach (var alert in consolidatedAlerts)
+{
+    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
+    Console.WriteLine($"  Source: {alert.Source}");
+    Console.WriteLine($"  Effective: {alert.Effective}");
+    Console.WriteLine($"  Expires: {alert.Expires}");
+}
+
+// MANUAL CONSOLIDATION (if you need access to the full CombinedWeatherAlertInformation object)
+var fullAlerts = await WeatherAlertHelper.BuildCombinedAlertsAsync(
+    "39.4300996", "-77.804161", logger, CancellationToken.None);
+
+if (fullAlerts is not null)
+{
+    Console.WriteLine($"Total Alerts: {fullAlerts.TotalAlerts}");
+    Console.WriteLine($"Data Sources: {string.Join(", ", fullAlerts.DataSources)}");
+
+    // Manually consolidate if needed
+    var consolidated = WeatherAlertHelper.ConsolidateAlerts(fullAlerts.Alerts, logger);
+    foreach (var alert in consolidated)
+    {
+        Console.WriteLine($"[{alert.Severity}] {alert.Event}");
+    }
+}
+
 // Build alerts from specific services
 var meteoalarmAlerts = await WeatherAlertHelper.BuildMeteoalarmAlertsAsync(
     latitude: "52.52",
@@ -360,6 +396,20 @@ var nwsAlerts = await WeatherAlertHelper.BuildNwsAlertsAsync(
     logger: logger,
     token: CancellationToken.None
 );
+
+// NWS with automatic consolidation (for US locations)
+var nwsConsolidated = await WeatherAlertHelper.BuildNwsAlertsConsolidatedAsync(
+    latitude: "39.4300996",
+    longitude: "-77.804161",
+    logger: logger,
+    token: CancellationToken.None
+);
+
+// Clean and simple - just use the results directly
+foreach (var alert in nwsConsolidated)
+{
+    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
+}
 
 var gdacsAlerts = await WeatherAlertHelper.BuildGdacsAlertsAsync(
     latitude: "35.6762",
@@ -502,8 +552,11 @@ Console.WriteLine($"State: {state}"); // Output: NSW
 | Method | Description |
 |--------|-------------|
 | `BuildCombinedAlertsAsync(string, string, ILogger, CancellationToken, string?, string?)` | Aggregates weather alerts from multiple global sources (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD) into a unified `CombinedWeatherAlertInformation` model. Intelligently selects services based on geographic location. Optional `provinceCode` for Canada and `stateCode` for Australia. |
+| `BuildCombinedAlertsConsolidatedAsync(...)` | **Recommended for UI display.** Returns only the consolidated alerts list, removing overlapping duplicates and keeping the highest severity alert from each group. Returns an empty list if no alerts exist. Clean, simple API. |
+| `ConsolidateAlerts(IEnumerable<WeatherAlertItem>, ILogger?)` | Consolidates a collection of alerts by removing overlapping duplicates and keeping the highest severity alert from each group. Use this for manual consolidation when you need access to the full `CombinedWeatherAlertInformation` object. |
 | `BuildMeteoalarmAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves alerts from Meteoalarm (Europe) |
 | `BuildNwsAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves alerts from the US National Weather Service |
+| `BuildNwsAlertsConsolidatedAsync(string, string, ILogger, CancellationToken)` | Retrieves alerts from NWS with automatic consolidation. Returns a list of unique, consolidated alerts. |
 | `BuildGdacsAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves global disaster alerts from GDACS |
 | `BuildEnvironmentCanadaAlertsAsync(string, string, string, ILogger, CancellationToken)` | Retrieves alerts from Environment Canada (requires province code) |
 | `BuildBomAlertsAsync(string, string, string, ILogger, CancellationToken)` | Retrieves alerts from the Australian Bureau of Meteorology (requires state code) |
