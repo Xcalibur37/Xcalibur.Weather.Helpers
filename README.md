@@ -1,6 +1,6 @@
 # Xcalibur.Weather.Helpers
 
-![Version](https://img.shields.io/badge/version-1.0.10-blue)
+![Version](https://img.shields.io/badge/version-1.0.11-blue)
 ![.NET Version](https://img.shields.io/badge/.NET-10.0-blue)
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
@@ -9,7 +9,34 @@ A comprehensive .NET helper library providing utility functions for weather-rela
 
 **Created by**: Joshua Arzt | **Company**: Xcalibur Systems, LLC.
 
-## 🎉 What's New in v1.0.10
+## Purpose
+
+**Xcalibur.Weather.Helpers** is designed to:
+
+- Provide high-level helper utilities that simplify working with weather data
+- Enable easy conversion between common weather measurement units (temperature, wind speed, pressure, length)
+- Offer convenient wrapper methods around Xcalibur.Weather.Services for common use cases
+- Deliver intelligent alert consolidation to eliminate duplicate weather alerts
+- Support geographic region detection and routing for multi-provider weather services
+- Reduce boilerplate code when building weather applications
+- Provide strongly-typed, easy-to-use APIs for weather data transformation
+
+## 💡 Use Cases
+
+This library is ideal for:
+
+- **Weather Applications**: Mobile and desktop apps requiring weather data with automatic unit conversion
+- **Dashboard & UI Development**: Applications needing consolidated, display-ready weather alerts without duplicates
+- **Smart Home Systems**: IoT devices requiring weather-based automation with simplified data access
+- **Agricultural Solutions**: Farm management systems with easy access to weather, pollen, and alert data
+- **Travel & Navigation Apps**: Location-based weather with intelligent multi-provider alert aggregation
+- **Health & Wellness Apps**: Allergy tracking with simplified pollen data access
+- **Emergency Management**: Systems requiring consolidated multi-source weather alerts
+- **Data Transformation**: Backend services needing unit conversion and data normalization
+- **Prototyping & MVPs**: Rapid development with high-level helper methods
+- **Web APIs**: REST services exposing weather data with built-in unit conversion
+
+## 🎉 What's New in v1.0.11
 
 **Consolidated Weather Alert Methods** - A complete suite of consolidated alert methods for cleaner, more efficient alert handling:
 
@@ -44,6 +71,9 @@ foreach (var alert in consolidated)
 
 ## 📋 Table of Contents
 
+- [Purpose](#purpose)
+- [Use Cases](#-use-cases)
+- [What's New](#-whats-new-in-v1011)
 - [Features](#features)
   - [Conversion Utilities](#conversion-utilities)
   - [Weather Service Helpers](#weather-service-helpers)
@@ -69,6 +99,7 @@ foreach (var alert in consolidated)
 - [Changelog](#changelog)
 - [License](#license)
 - [Related Projects](#related-projects)
+- [Contributing](#contributing)
 
 ## Features
 
@@ -103,13 +134,13 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.8" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.11" />
 ```
 
 ## Requirements
 
 - **.NET 10.0** or later
-- **Xcalibur.Weather.Services 1.0.8** (included as dependency)
+- **Xcalibur.Weather.Services 1.0.11** (included as dependency)
 - **Microsoft.Extensions.Hosting 10.0.9** (included as dependency)
 
 ## Usage
@@ -765,12 +796,18 @@ Service helpers manage `HttpClient` usage internally, so callers can use the hel
 ## Dependencies
 
 This library depends on:
-- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.8) - Weather service providers and models
+- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.11) - Weather service providers and models
 - [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) (v10.0.9) - Hosting abstractions
 
 ## Changelog
 
-### Version 1.0.10 (Latest)
+### Version 1.0.11 (Latest)
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.11
+- 📚 **Documentation**: Enhanced README with Purpose and Use Cases sections
+- 🏗️ **Improved**: Project structure and formatting consistency
+- 🔧 **Maintenance**: Minor improvements and dependency updates
+
+### Version 1.0.10
 - ✨ **New**: Added consolidated alert methods for all 7 weather alert providers
   - `BuildCombinedAlertsConsolidatedAsync` - Multi-provider consolidated alerts
   - `BuildNwsAlertsConsolidatedAsync` - US National Weather Service
@@ -803,8 +840,18 @@ Copyright © 2006 - 2026, Xcalibur Systems, LLC - All Rights Reserved
 
 ## Related Projects
 
-- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.0.8) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
-- **[Xcalibur.Weather.Models](https://www.nuget.org/packages/Xcalibur.Weather.Models/)** - Core weather data models and DTOs (included in Xcalibur.Weather.Services) ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Models))
+- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.0.11) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
+- **[Xcalibur.Weather.Models](https://www.nuget.org/packages/Xcalibur.Weather.Models/)** (v1.0.11) - Core weather data models and DTOs (included in Xcalibur.Weather.Services) ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Models))
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests to improve the library.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 

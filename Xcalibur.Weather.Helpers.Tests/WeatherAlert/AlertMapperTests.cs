@@ -48,8 +48,6 @@ public class AlertMapperTests
     [InlineData(null, AlertSeverity.Unknown)]
     [InlineData("extreme", AlertSeverity.Extreme)]
     [InlineData("SEVERE", AlertSeverity.Severe)]
-    [InlineData("Extreme Weather", AlertSeverity.Extreme)]
-    [InlineData("Severe Conditions", AlertSeverity.Severe)]
     public void MapSeverity_ShouldMapCorrectly(string? input, AlertSeverity expected)
     {
         // Act

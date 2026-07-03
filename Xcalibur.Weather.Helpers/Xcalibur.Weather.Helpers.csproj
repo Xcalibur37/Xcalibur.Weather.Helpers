@@ -7,7 +7,7 @@
 
 		<!-- NuGet Package Metadata -->
 		<PackageId>Xcalibur.Weather.Helpers</PackageId>
-		<Version>1.0.10</Version>
+		<Version>1.0.11</Version>
 		<Authors>Joshua Arzt</Authors>
 		<Company>Xcalibur Systems, LLC.</Company>
 		<Product>Xcalibur.Weather.Helpers</Product>
@@ -17,7 +17,7 @@
 		<RepositoryType>git</RepositoryType>
 		<PackageIcon>X_logo_512.png</PackageIcon>
 		<PackageTags>weather;helpers;utilities;conversion;openmeteo;geocoding;air-quality;weather-data;temperature;wind-speed;meteorology;ipgeolocation;units</PackageTags>
-		<PackageReleaseNotes>v1.0.10: Added consolidated alert methods for all weather alert providers (NWS, Meteoalarm, Environment Canada, BOM, GDACS, DWD, EMSC). New methods automatically consolidate overlapping alerts and return clean, simple lists of unique alerts. Recommended for UI display to avoid showing duplicate alerts for the same weather event.</PackageReleaseNotes>
+		<PackageReleaseNotes>Performance improvements and property descriptions for Weather Alerts.</PackageReleaseNotes>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<PackageLicenseExpression></PackageLicenseExpression>
@@ -51,7 +51,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
-		<PackageReference Include="Xcalibur.Weather.Services" Version="1.0.8" />
+		<PackageReference Include="Xcalibur.Weather.Services" Version="1.0.11" />
 	</ItemGroup>
 
 </Project>
