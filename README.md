@@ -1,6 +1,6 @@
 # Xcalibur.Weather.Helpers
 
-![Version](https://img.shields.io/badge/version-1.0.11-blue)
+![Version](https://img.shields.io/badge/version-1.0.12-blue)
 ![.NET Version](https://img.shields.io/badge/.NET-10.0-blue)
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
@@ -36,7 +36,7 @@ This library is ideal for:
 - **Prototyping & MVPs**: Rapid development with high-level helper methods
 - **Web APIs**: REST services exposing weather data with built-in unit conversion
 
-## 🎉 What's New in v1.0.11
+## 🎉 What's New in v1.0.12
 
 **Consolidated Weather Alert Methods** - A complete suite of consolidated alert methods for cleaner, more efficient alert handling:
 
@@ -134,13 +134,13 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.11" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.12" />
 ```
 
 ## Requirements
 
 - **.NET 10.0** or later
-- **Xcalibur.Weather.Services 1.0.11** (included as dependency)
+- **Xcalibur.Weather.Services 1.0.12** (included as dependency)
 - **Microsoft.Extensions.Hosting 10.0.9** (included as dependency)
 
 ## Usage
@@ -796,13 +796,13 @@ Service helpers manage `HttpClient` usage internally, so callers can use the hel
 ## Dependencies
 
 This library depends on:
-- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.11) - Weather service providers and models
+- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.12) - Weather service providers and models
 - [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) (v10.0.9) - Hosting abstractions
 
 ## Changelog
 
-### Version 1.0.11 (Latest)
-- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.11
+### Version 1.0.12 (Latest)
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.12
 - 📚 **Documentation**: Enhanced README with Purpose and Use Cases sections
 - 🏗️ **Improved**: Project structure and formatting consistency
 - 🔧 **Maintenance**: Minor improvements and dependency updates
@@ -840,8 +840,8 @@ Copyright © 2006 - 2026, Xcalibur Systems, LLC - All Rights Reserved
 
 ## Related Projects
 
-- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.0.11) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
-- **[Xcalibur.Weather.Models](https://www.nuget.org/packages/Xcalibur.Weather.Models/)** (v1.0.11) - Core weather data models and DTOs (included in Xcalibur.Weather.Services) ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Models))
+- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.0.12) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
+- **[Xcalibur.Weather.Models](https://www.nuget.org/packages/Xcalibur.Weather.Models/)** (v1.0.12) - Core weather data models and DTOs (included in Xcalibur.Weather.Services) ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Models))
 
 ## Contributing
 
