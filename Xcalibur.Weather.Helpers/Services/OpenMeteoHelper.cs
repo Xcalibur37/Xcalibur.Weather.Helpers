@@ -65,9 +65,10 @@ namespace Xcalibur.Weather.Helpers.Services
         public static async Task<HourlyForecastPoint[]?> BuildHourlyForecastAsync(string latitude, string longitude, ILogger logger, CancellationToken token)
         {
             var response = await GetHourlyForecastAsync(latitude, longitude, logger, token);
+            var supplementalResponse = await GetHourlyForecastSupplementalAsync(latitude, longitude, logger, token);
 
             // Build hourly forecast points.
-            var forecastPoints = InternalBuildHourlyForecast(response);
+            var forecastPoints = InternalBuildHourlyForecast(response, supplementalResponse);
 
             // Return the built forecast points.
             return forecastPoints;
@@ -167,7 +168,7 @@ namespace Xcalibur.Weather.Helpers.Services
         }
 
         /// <summary>
-        /// Gets the hourly forecast asynchronously.
+        /// Gets the hourly forecast for the next 48 hours asynchronously.
         /// </summary>
         /// <param name="latitude">The latitude.</param>
         /// <param name="longitude">The longitude.</param>
@@ -180,6 +181,22 @@ namespace Xcalibur.Weather.Helpers.Services
 
             // Get the hourly weather for specific latitude and longitude.
             return await service.GetHourlyForecastAsync(latitude, longitude, token);
+        }
+
+        /// <summary>
+        /// Gets the supplemental hourly forecast for the next 48 hours asynchronously.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The token.</param>
+        /// <returns></returns>
+        private static async Task<HourlyWeatherResponse?> GetHourlyForecastSupplementalAsync(string latitude, string longitude, ILogger logger, CancellationToken token)
+        {
+            var service = new OpenMeteoService(_sharedHttpClient, logger);
+
+            // Get the supplemental hourly weather for specific latitude and longitude.
+            return await service.GetHourlyForecastSupplementalAsync(latitude, longitude, token);
         }
 
         /// <summary>
@@ -203,8 +220,9 @@ namespace Xcalibur.Weather.Helpers.Services
         /// Builds the hourly forecast.
         /// </summary>
         /// <param name="response">The response.</param>
+        /// <param name="supplementalResponse">The supplemental response.</param>
         /// <returns></returns>
-        private static HourlyForecastPoint[]? InternalBuildHourlyForecast(HourlyWeatherResponse? response)
+        private static HourlyForecastPoint[]? InternalBuildHourlyForecast(HourlyWeatherResponse? response, HourlyWeatherResponse? supplementalResponse = null)
         {
             // Hourly forecast must have a value to scroll.
             if (response?.Hourly is not { } data) return null;
@@ -223,7 +241,15 @@ namespace Xcalibur.Weather.Helpers.Services
                 var isCurrent = dateValue == nowValue;
 
                 // Map data to forecast point
-                forecastPoints[index] = new HourlyForecastPoint(data, index, isCurrent);
+                var point = new HourlyForecastPoint(data, index, isCurrent);
+                if (supplementalResponse?.Hourly is { } supplementalData && supplementalData.Time.Length > index)
+                {
+                    // Map supplemental data to forecast point
+                    point.Map(supplementalData, index, isCurrent);
+                }
+
+                // Assign the point to the forecast points array.
+                forecastPoints[index] = point;
             }
 
             // Return the built forecast points.
