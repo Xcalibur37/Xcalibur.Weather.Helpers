@@ -1,6 +1,6 @@
 # Xcalibur.Weather.Helpers
 
-![Version](https://img.shields.io/badge/version-1.0.16-blue)
+![Version](https://img.shields.io/badge/version-1.0.17-blue)
 ![.NET Version](https://img.shields.io/badge/.NET-10.0-blue)
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
@@ -36,7 +36,24 @@ This library is ideal for:
 - **Prototyping & MVPs**: Rapid development with high-level helper methods
 - **Web APIs**: REST services exposing weather data with built-in unit conversion
 
-## 🎉 What's New in v1.0.16
+## 🎉 What's New in v1.0.17
+
+**Enhanced Multi-Language Support** - Improved compatibility and performance:
+
+- ✅ **Weather Code Value Retired**: Removed `WeatherCodeValue` string property for improved multi-language compatibility
+  - The WMO weather code integer is still available in forecast data
+  - Applications can now implement locale-specific descriptions based on their language requirements
+  - Reduces data model size and improves performance
+- 🐛 **Bug Fixes**: Several improvements and bug fixes for model handling
+- 🔧 **Model Changes**: Optimized data models for better performance
+- ⚡ **Performance**: MVVM performance improvements
+- 🧪 **Testing**: Updated test suite with improved coverage
+
+**Migration Note**: If your application used the `WeatherCodeValue` property, you'll need to implement your own locale-specific weather code descriptions based on the WMO code integer.
+
+---
+
+### Previous Release - v1.0.16
 
 **Consolidated Weather Alert Methods** - A complete suite of consolidated alert methods for cleaner, more efficient alert handling:
 
@@ -134,13 +151,13 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.16" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.17" />
 ```
 
 ## Requirements
 
 - **.NET 10.0** or later
-- **Xcalibur.Weather.Services 1.0.16** (included as dependency)
+- **Xcalibur.Weather.Services 1.0.17** (included as dependency)
 - **Microsoft.Extensions.Hosting 10.0.10** (included as dependency)
 
 ## Usage
@@ -796,12 +813,29 @@ Service helpers manage `HttpClient` usage internally, so callers can use the hel
 ## Dependencies
 
 This library depends on:
-- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.16) - Weather service providers and models
+- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.17) - Weather service providers and models
 - [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) (v10.0.10) - Hosting abstractions
 
 ## Changelog
 
-### Version 1.0.15 (Latest)
+### Version 1.0.17 (Latest)
+- 🌍 **Breaking Change**: Weather code value retired for multi-language compatibility
+  - Removed `WeatherCodeValue` string property from forecast models
+  - WMO weather code integer remains available for custom locale implementations
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.17
+- 🐛 **Fixed**: Several improvements and bug fixes for model handling
+- ⚡ **Performance**: MVVM performance improvements and optimizations
+- 🔧 **Improved**: Model changes for better data handling
+- 🧪 **Testing**: Several test updates and improvements
+
+### Version 1.0.16
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.17
+- 🔗 **Updated**: Dependency on Microsoft.Extensions.Hosting v10.0.10
+- 📚 **Documentation**: Enhanced README with Purpose and Use Cases sections
+- 🏗️ **Improved**: Project structure and formatting consistency
+- 🔧 **Maintenance**: Minor improvements and dependency updates
+
+### Version 1.0.15
 - 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.16
 - 🔗 **Updated**: Dependency on Microsoft.Extensions.Hosting v10.0.10
 - 📚 **Documentation**: Enhanced README with Purpose and Use Cases sections
@@ -841,7 +875,7 @@ Copyright © 2006 - 2026, Xcalibur Systems, LLC - All Rights Reserved
 
 ## Related Projects
 
-- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.0.16) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
+- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.0.17) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
 - **[Xcalibur.Weather.Models](https://www.nuget.org/packages/Xcalibur.Weather.Models/)** (v1.0.15) - Core weather data models and DTOs (included in Xcalibur.Weather.Services) ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Models))
 
 ---

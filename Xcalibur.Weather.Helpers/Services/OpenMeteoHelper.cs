@@ -20,21 +20,7 @@ namespace Xcalibur.Weather.Helpers.Services
             Timeout = TimeSpan.FromSeconds(10)
         };
 
-        /// <summary>
-        /// Builds the air quality point.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns></returns>
-        public static async Task<AirQualityPoint?> BuildAirQualityPointAsync(string latitude, string longitude, ILogger logger, CancellationToken token)
-        {
-            var airQualityResponse = await GetCurrentAirQualityAsync(latitude, longitude, logger, token);
-
-            // Build AirQualityPoint
-            return airQualityResponse?.Current is null ? null : new AirQualityPoint(airQualityResponse.Current);
-        }
+        #region Current Forecast
 
         /// <summary>
         /// Builds the current forecast.
@@ -55,6 +41,26 @@ namespace Xcalibur.Weather.Helpers.Services
         }
 
         /// <summary>
+        /// Gets the current weather forecast asynchronously.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns></returns>
+        private static async Task<CurrentWeatherResponse?> GetCurrentWeatherForecastAsync(string latitude, string longitude, ILogger logger, CancellationToken token)
+        {
+            var service = new OpenMeteoService(_sharedHttpClient, logger);
+
+            // Get the current weather for specific latitude and longitude.
+            return await service.GetCurrentWeatherAsync(latitude, longitude, token);
+        }
+
+        #endregion
+
+        #region Hourly Forecast
+
+        /// <summary>
         /// Builds the hourly forecast.
         /// </summary>
         /// <param name="latitude">The latitude.</param>
@@ -72,99 +78,6 @@ namespace Xcalibur.Weather.Helpers.Services
 
             // Return the built forecast points.
             return forecastPoints;
-        }
-
-        /// <summary>
-        /// Builds the yesterday's forecast.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="dateValue">The date value.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns></returns>
-        public static async Task<HourlyForecastPoint[]?> BuildYesterdayHourlyForecastAsync(string latitude, string longitude, string dateValue, ILogger logger, CancellationToken token)
-        {
-            var response = await GetYesterdayHourlyForecastAsync(latitude, longitude, dateValue, logger, token);
-
-            // Build hourly forecast points.
-            var forecastPoints = InternalBuildHourlyForecast(response);
-
-            // Return the built forecast points.
-            return forecastPoints;
-        }
-
-        /// <summary>
-        /// Builds the daily forecast.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="forecastDays">The forecast days.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns></returns>
-        public static async Task<DailyForecastPoint[]?> BuildDailyForecastAsync(string latitude, string longitude, int forecastDays, ILogger logger, CancellationToken token)
-        {
-            var response = await GetDailyForecastAsync(latitude, longitude, forecastDays, logger, token);
-
-            // Build daily forecast points.
-            var forecastPoints = InternalBuildDailyForecast(response);
-
-            // Return the built forecast points.
-            return forecastPoints;
-        }
-
-        /// <summary>
-        /// Builds the yesterday daily forecast asynchronous.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="startDateValue">The start date value.</param>
-        /// <param name="endDateValue">The end date value.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The token.</param>
-        /// <returns></returns>
-        public static async Task<DailyForecastPoint[]?> BuildYesterdayDailyForecastAsync(string latitude, string longitude, string startDateValue, string endDateValue, ILogger logger, CancellationToken token)
-        {
-            var response = await GetYesterdayDailyForecastAsync(latitude, longitude, startDateValue, endDateValue, logger, token);
-
-            // Build daily forecast points.
-            var forecastPoints = InternalBuildDailyForecast(response);
-
-            // Return the built forecast points.
-            return forecastPoints;
-        }
-
-        /// <summary>
-        /// Gets the current air quality reading asynchronously.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns></returns>
-        private static async Task<AirQualityResponse?> GetCurrentAirQualityAsync(string latitude, string longitude, ILogger logger, CancellationToken token)
-        {
-            var service = new OpenMeteoService(_sharedHttpClient, logger);
-
-            // Get the current weather for specific latitude and longitude.
-            return await service.GetCurrentAirQualityAsync(latitude, longitude, token);
-        }
-
-        /// <summary>
-        /// Gets the current weather forecast asynchronously.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns></returns>
-        private static async Task<CurrentWeatherResponse?> GetCurrentWeatherForecastAsync(string latitude, string longitude, ILogger logger, CancellationToken token)
-        {
-            var service = new OpenMeteoService(_sharedHttpClient, logger);
-
-            // Get the current weather for specific latitude and longitude.
-            return await service.GetCurrentWeatherAsync(latitude, longitude, token);
         }
 
         /// <summary>
@@ -199,6 +112,26 @@ namespace Xcalibur.Weather.Helpers.Services
             return await service.GetHourlyForecastSupplementalAsync(latitude, longitude, token);
         }
 
+        /// <summary>
+        /// Builds the yesterday's forecast.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="dateValue">The date value.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns></returns>
+        public static async Task<HourlyForecastPoint[]?> BuildYesterdayHourlyForecastAsync(string latitude, string longitude, string dateValue, ILogger logger, CancellationToken token)
+        {
+            var response = await GetYesterdayHourlyForecastAsync(latitude, longitude, dateValue, logger, token);
+
+            // Build hourly forecast points.
+            var forecastPoints = InternalBuildHourlyForecast(response);
+
+            // Return the built forecast points.
+            return forecastPoints;
+        }
+        
         /// <summary>
         /// Gets the hourly forecast asynchronously.
         /// </summary>
@@ -256,6 +189,52 @@ namespace Xcalibur.Weather.Helpers.Services
             return forecastPoints;
         }
 
+        #endregion
+
+        #region Daily Forecast
+
+        /// <summary>
+        /// Builds the daily forecast.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="forecastDays">The forecast days.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns></returns>
+        public static async Task<DailyForecastPoint[]?> BuildDailyForecastAsync(string latitude, string longitude, int forecastDays, ILogger logger, CancellationToken token)
+        {
+            var response = await GetDailyForecastAsync(latitude, longitude, forecastDays, logger, token);
+            var supplementalResponse = await GetDailyForecastSupplementalAsync(latitude, longitude, forecastDays, logger, token);
+
+            // Build daily forecast points.
+            var forecastPoints = InternalBuildDailyForecast(response, supplementalResponse);
+
+            // Return the built forecast points.
+            return forecastPoints;
+        }
+
+        /// <summary>
+        /// Builds the yesterday daily forecast asynchronous.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="startDateValue">The start date value.</param>
+        /// <param name="endDateValue">The end date value.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The token.</param>
+        /// <returns></returns>
+        public static async Task<DailyForecastPoint[]?> BuildYesterdayDailyForecastAsync(string latitude, string longitude, string startDateValue, string endDateValue, ILogger logger, CancellationToken token)
+        {
+            var response = await GetYesterdayDailyForecastAsync(latitude, longitude, startDateValue, endDateValue, logger, token);
+
+            // Build daily forecast points.
+            var forecastPoints = InternalBuildDailyForecast(response);
+
+            // Return the built forecast points.
+            return forecastPoints;
+        }
+
         /// <summary>
         /// Gets the daily forecast asynchronously.
         /// </summary>
@@ -271,6 +250,23 @@ namespace Xcalibur.Weather.Helpers.Services
 
             // Get the daily weather for specific latitude and longitude.
             return await service.GetDailyForecastAsync(latitude, longitude, forecastDays, token);
+        }
+
+        /// <summary>
+        /// Gets the daily forecast supplemental asynchronously.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="forecastDays">The forecast days.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The token.</param>
+        /// <returns></returns>
+        private static async Task<DailyWeatherResponse?> GetDailyForecastSupplementalAsync(string latitude, string longitude, int forecastDays, ILogger logger, CancellationToken token)
+        {
+            var service = new OpenMeteoService(_sharedHttpClient, logger);
+
+            // Get the daily weather for specific latitude and longitude.
+            return await service.GetDailyForecastSupplementalAsync(latitude, longitude, forecastDays, token);
         }
 
         /// <summary>
@@ -292,11 +288,12 @@ namespace Xcalibur.Weather.Helpers.Services
         }
 
         /// <summary>
-        /// Internals the build daily forecast.
+        /// Builds the daily forecast.
         /// </summary>
         /// <param name="response">The response.</param>
+        /// <param name="supplementalResponse">The supplemental response.</param>
         /// <returns></returns>
-        private static DailyForecastPoint[]? InternalBuildDailyForecast(DailyWeatherResponse? response)
+        private static DailyForecastPoint[]? InternalBuildDailyForecast(DailyWeatherResponse? response, DailyWeatherResponse? supplementalResponse = null)
         {
             // Hourly forecast must have a value to scroll.
             if (response?.Daily is not { } data) return null;
@@ -311,11 +308,58 @@ namespace Xcalibur.Weather.Helpers.Services
             var forecastPoints = new DailyForecastPoint[data.Time.Length];
             for (var index = 0; index < data.Time.Length; index++)
             {
-                forecastPoints[index] = new DailyForecastPoint(data, index, nowValue);
+                // Map data to forecast point
+                var point = new DailyForecastPoint(data, index, nowValue);
+                if (supplementalResponse?.Daily is { } supplementalData && supplementalData.Time.Length > index)
+                {
+                    // Map supplemental data to forecast point
+                    point.Map(supplementalData, index, nowValue);
+                }
+                
+                // Assign the point to the forecast points array.
+                forecastPoints[index] = point;
             }
 
             // Return the built forecast points.
             return forecastPoints;
         }
+
+        #endregion
+
+        #region Air Quality Forecast
+
+        /// <summary>
+        /// Builds the air quality point.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns></returns>
+        public static async Task<AirQualityPoint?> BuildAirQualityPointAsync(string latitude, string longitude, ILogger logger, CancellationToken token)
+        {
+            var airQualityResponse = await GetCurrentAirQualityAsync(latitude, longitude, logger, token);
+
+            // Build AirQualityPoint
+            return airQualityResponse?.Current is null ? null : new AirQualityPoint(airQualityResponse.Current);
+        }
+
+        /// <summary>
+        /// Gets the current air quality reading asynchronously.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns></returns>
+        private static async Task<AirQualityResponse?> GetCurrentAirQualityAsync(string latitude, string longitude, ILogger logger, CancellationToken token)
+        {
+            var service = new OpenMeteoService(_sharedHttpClient, logger);
+
+            // Get the current weather for specific latitude and longitude.
+            return await service.GetCurrentAirQualityAsync(latitude, longitude, token);
+        }
+
+        #endregion
     }
 }
