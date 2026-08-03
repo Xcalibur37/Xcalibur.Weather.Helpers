@@ -858,7 +858,16 @@ This library depends on:
 
 ## Changelog
 
-### Version 1.0.18 (Latest)
+### Version 1.0.19 (Latest)
+- ✨ **New**: Relative humidity support for daily forecasts
+  - Added relative humidity data to daily forecast models
+  - Enhanced daily weather models with moisture information
+  - Improved data completeness for agricultural and outdoor activity planning
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.19
+- 🔧 **Improved**: Daily forecast models enhanced with additional meteorological parameters
+- 📦 **Packaging**: Updated dependencies for better compatibility
+
+### Version 1.0.18
 - ✨ **New**: Supplemental weather data support for hourly and daily forecasts
   - Added `GetHourlyForecastSupplementalAsync` method for enhanced hourly data
   - Added `GetDailyForecastSupplementalAsync` method for enhanced daily data
@@ -926,7 +935,7 @@ Copyright © 2006 - 2026, Xcalibur Systems, LLC - All Rights Reserved
 
 ## Related Projects
 
-- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.0.18) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
+- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.0.19) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
 - **[Xcalibur.Weather.Models](https://www.nuget.org/packages/Xcalibur.Weather.Models/)** (v1.0.18) - Core weather data models and DTOs (included in Xcalibur.Weather.Services) ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Models))
 
 ---
