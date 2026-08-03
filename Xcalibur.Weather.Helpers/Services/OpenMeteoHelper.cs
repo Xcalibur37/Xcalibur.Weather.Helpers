@@ -53,7 +53,7 @@ namespace Xcalibur.Weather.Helpers.Services
             var service = new OpenMeteoService(_sharedHttpClient, logger);
 
             // Get the current weather for specific latitude and longitude.
-            return await service.GetCurrentWeatherAsync(latitude, longitude, token);
+            return await service.GetCurrentWeatherAsync(latitude, longitude, "", token);
         }
 
         #endregion
@@ -93,7 +93,7 @@ namespace Xcalibur.Weather.Helpers.Services
             var service = new OpenMeteoService(_sharedHttpClient, logger);
 
             // Get the hourly weather for specific latitude and longitude.
-            return await service.GetHourlyForecastAsync(latitude, longitude, token);
+            return await service.GetHourlyForecastAsync(latitude, longitude, "", token);
         }
 
         /// <summary>
@@ -249,7 +249,7 @@ namespace Xcalibur.Weather.Helpers.Services
             var service = new OpenMeteoService(_sharedHttpClient, logger);
 
             // Get the daily weather for specific latitude and longitude.
-            return await service.GetDailyForecastAsync(latitude, longitude, forecastDays, token);
+            return await service.GetDailyForecastAsync(latitude, longitude, forecastDays, "", token);
         }
 
         /// <summary>

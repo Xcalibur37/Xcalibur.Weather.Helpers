@@ -1,6 +1,6 @@
 # Xcalibur.Weather.Helpers
 
-![Version](https://img.shields.io/badge/version-1.0.18-blue)
+![Version](https://img.shields.io/badge/version-1.0.19-blue)
 ![.NET Version](https://img.shields.io/badge/.NET-10.0-blue)
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
@@ -36,7 +36,25 @@ This library is ideal for:
 - **Prototyping & MVPs**: Rapid development with high-level helper methods
 - **Web APIs**: REST services exposing weather data with built-in unit conversion
 
-## 🎉 What's New in v1.0.18
+## 🎉 What's New in v1.0.19
+
+**Enhanced OpenMeteo Functionality** - Expanded weather data support:
+
+- ✅ **Relative Humidity Support**: Added relative humidity data to daily forecast models
+  - Daily forecasts now include humidity information for better weather planning
+  - Enhanced daily weather models with additional moisture data
+  - Improved data completeness for agricultural and outdoor applications
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.19
+  - Latest OpenMeteo API improvements
+  - Enhanced data models with additional parameters
+- 🔧 **Improved**: Daily forecast models enhanced with more meteorological data
+- 📦 **Packaging**: Updated dependencies for better compatibility
+
+**Benefits**: Applications requiring humidity data for daily forecasts now have access to this important meteorological parameter for use cases like agriculture, outdoor activities, and health monitoring.
+
+---
+
+### Previous Release - v1.0.18
 
 **Supplemental Weather Data** - Enhanced forecast capabilities with additional data:
 
@@ -173,13 +191,13 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.18" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.19" />
 ```
 
 ## Requirements
 
 - **.NET 10.0** or later
-- **Xcalibur.Weather.Services 1.0.18** (included as dependency)
+- **Xcalibur.Weather.Services 1.0.19** (included as dependency)
 - **Microsoft.Extensions.Hosting 10.0.10** (included as dependency)
 
 ## Usage
@@ -835,7 +853,7 @@ Service helpers manage `HttpClient` usage internally, so callers can use the hel
 ## Dependencies
 
 This library depends on:
-- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.18) - Weather service providers and models
+- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.19) - Weather service providers and models
 - [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) (v10.0.10) - Hosting abstractions
 
 ## Changelog
