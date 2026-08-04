@@ -581,5 +581,334 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                     RestoreOriginalHttpClient();
                 }
             }
+
+        #region BuildHourlyAirQualityAsync Tests
+
+        /// <summary>
+        /// Builds the hourly air quality should return air quality points when data present.
+        /// </summary>
+        [Fact]
+        public async Task BuildHourlyAirQuality_ShouldReturnAirQualityPoints_WhenDataPresent()
+        {
+            // Arrange - hourly air quality response with two hours
+            var hour0 = DateTime.Now.ToString("yyyy-MM-ddTHH:00");
+            var hour1 = DateTime.Now.AddHours(1).ToString("yyyy-MM-ddTHH:00");
+
+            var airQualityObj = new
+            {
+                hourly = new
+                {
+                    time = new[] { hour0, hour1 },
+                    pm10 = new[] { 15.5, 16.2 },
+                    pm2_5 = new[] { 8.3, 9.1 },
+                    carbon_monoxide = new[] { 0.3, 0.35 },
+                    nitrogen_dioxide = new[] { 12.5, 13.0 },
+                    sulphur_dioxide = new[] { 2.1, 2.3 },
+                    ozone = new[] { 45.0, 46.5 },
+                    us_aqi = new[] { 42, 45 },
+                    european_aqi = new[] { 38, 40 }
+                }
+            };
+
+            var json = JsonSerializer.Serialize(airQualityObj);
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+            try
+            {
+                var logger = NullLogger.Instance;
+
+                // Act
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 2, logger, CancellationToken.None);
+
+                // Assert
+                points.Should().NotBeNull();
+                points.Should().HaveCount(2);
+
+                // Verify first point
+                points![0].Time.Should().Be(hour0);
+                points[0].IsCurrent.Should().BeTrue();
+                points[0].Pm10.Should().BeApproximately(15.5, 0.0001);
+                points[0].Pm25.Should().BeApproximately(8.3, 0.0001);
+                points[0].CarbonMonoxide.Should().BeApproximately(0.3, 0.0001);
+                points[0].NitrogenDioxide.Should().BeApproximately(12.5, 0.0001);
+                points[0].SulphurDioxide.Should().BeApproximately(2.1, 0.0001);
+                points[0].Ozone.Should().BeApproximately(45.0, 0.0001);
+                points[0].UsAqi.Should().Be(42);
+                points[0].EuAqi.Should().Be(38);
+
+                // Verify second point
+                points[1].Time.Should().Be(hour1);
+                points[1].IsCurrent.Should().BeFalse();
+                points[1].Pm10.Should().BeApproximately(16.2, 0.0001);
+                points[1].Pm25.Should().BeApproximately(9.1, 0.0001);
+                points[1].UsAqi.Should().Be(45);
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
         }
+
+        /// <summary>
+        /// Builds the hourly air quality should return null when response is null.
+        /// </summary>
+        [Fact]
+        public async Task BuildHourlyAirQuality_ShouldReturnNull_WhenResponseIsNull()
+        {
+            // Arrange - empty response
+            var json = "{}";
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+            try
+            {
+                var logger = NullLogger.Instance;
+
+                // Act
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("0", "0", 24, logger, CancellationToken.None);
+
+                // Assert
+                points.Should().BeNull();
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
+
+        /// <summary>
+        /// Builds the hourly air quality should return null when hourly data is absent.
+        /// </summary>
+        [Fact]
+        public async Task BuildHourlyAirQuality_ShouldReturnNull_WhenHourlyDataAbsent()
+        {
+            // Arrange - response without hourly block
+            var json = """
+                {
+                  "latitude": 12.34,
+                  "longitude": 56.78
+                }
+                """;
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+            try
+            {
+                var logger = NullLogger.Instance;
+
+                // Act
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 48, logger, CancellationToken.None);
+
+                // Assert
+                points.Should().BeNull();
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
+
+        /// <summary>
+        /// Builds the hourly air quality should return null when time array is empty.
+        /// </summary>
+        [Fact]
+        public async Task BuildHourlyAirQuality_ShouldReturnNull_WhenTimeArrayIsEmpty()
+        {
+            // Arrange - hourly block with empty arrays
+            var airQualityObj = new
+            {
+                hourly = new
+                {
+                    time = Array.Empty<string>(),
+                    pm10 = Array.Empty<double>(),
+                    pm2_5 = Array.Empty<double>(),
+                    carbon_monoxide = Array.Empty<double>(),
+                    nitrogen_dioxide = Array.Empty<double>(),
+                    sulphur_dioxide = Array.Empty<double>(),
+                    ozone = Array.Empty<double>(),
+                    us_aqi = Array.Empty<int>(),
+                    european_aqi = Array.Empty<int>()
+                }
+            };
+
+            var json = JsonSerializer.Serialize(airQualityObj);
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+            try
+            {
+                var logger = NullLogger.Instance;
+
+                // Act
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 24, logger, CancellationToken.None);
+
+                // Assert
+                points.Should().BeNull();
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
+
+        /// <summary>
+        /// Builds the hourly air quality should correctly mark current hour.
+        /// </summary>
+        [Fact]
+        public async Task BuildHourlyAirQuality_ShouldCorrectlyMarkCurrentHour()
+        {
+            // Arrange - three hours: past, current, future
+            var pastHour = DateTime.Now.AddHours(-1).ToString("yyyy-MM-ddTHH:00");
+            var currentHour = DateTime.Now.ToString("yyyy-MM-ddTHH:00");
+            var futureHour = DateTime.Now.AddHours(1).ToString("yyyy-MM-ddTHH:00");
+
+            var airQualityObj = new
+            {
+                hourly = new
+                {
+                    time = new[] { pastHour, currentHour, futureHour },
+                    pm10 = new[] { 10.0, 11.0, 12.0 },
+                    pm2_5 = new[] { 5.0, 6.0, 7.0 },
+                    carbon_monoxide = new[] { 0.2, 0.3, 0.4 },
+                    nitrogen_dioxide = new[] { 10.0, 11.0, 12.0 },
+                    sulphur_dioxide = new[] { 1.0, 2.0, 3.0 },
+                    ozone = new[] { 40.0, 41.0, 42.0 },
+                    us_aqi = new[] { 30, 35, 40 },
+                    european_aqi = new[] { 28, 32, 36 }
+                }
+            };
+
+            var json = JsonSerializer.Serialize(airQualityObj);
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+            try
+            {
+                var logger = NullLogger.Instance;
+
+                // Act
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 3, logger, CancellationToken.None);
+
+                // Assert
+                points.Should().NotBeNull();
+                points.Should().HaveCount(3);
+
+                // Past hour should not be marked as current
+                points![0].Time.Should().Be(pastHour);
+                points[0].IsCurrent.Should().BeFalse();
+
+                // Current hour should be marked as current
+                points[1].Time.Should().Be(currentHour);
+                points[1].IsCurrent.Should().BeTrue();
+
+                // Future hour should not be marked as current
+                points[2].Time.Should().Be(futureHour);
+                points[2].IsCurrent.Should().BeFalse();
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
+
+        /// <summary>
+        /// Builds the hourly air quality should handle large forecast hours parameter.
+        /// </summary>
+        [Fact]
+        public async Task BuildHourlyAirQuality_ShouldHandleLargeForecastHours()
+        {
+            // Arrange - generate 96 hours of data
+            var timeValues = Enumerable.Range(0, 96)
+                .Select(i => DateTime.Now.AddHours(i).ToString("yyyy-MM-ddTHH:00"))
+                .ToArray();
+
+            var airQualityObj = new
+            {
+                hourly = new
+                {
+                    time = timeValues,
+                    pm10 = Enumerable.Range(0, 96).Select(i => 10.0 + i * 0.1).ToArray(),
+                    pm2_5 = Enumerable.Range(0, 96).Select(i => 5.0 + i * 0.05).ToArray(),
+                    carbon_monoxide = Enumerable.Range(0, 96).Select(i => 0.2 + i * 0.01).ToArray(),
+                    nitrogen_dioxide = Enumerable.Range(0, 96).Select(i => 10.0 + i * 0.1).ToArray(),
+                    sulphur_dioxide = Enumerable.Range(0, 96).Select(i => 1.0 + i * 0.02).ToArray(),
+                    ozone = Enumerable.Range(0, 96).Select(i => 40.0 + i * 0.5).ToArray(),
+                    us_aqi = Enumerable.Range(0, 96).Select(i => 30 + i).ToArray(),
+                    european_aqi = Enumerable.Range(0, 96).Select(i => 28 + i).ToArray()
+                }
+            };
+
+            var json = JsonSerializer.Serialize(airQualityObj);
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+            try
+            {
+                var logger = NullLogger.Instance;
+
+                // Act
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 96, logger, CancellationToken.None);
+
+                // Assert
+                points.Should().NotBeNull();
+                points.Should().HaveCount(96);
+                points![0].Pm10.Should().BeApproximately(10.0, 0.0001);
+                points[95].Pm10.Should().BeApproximately(19.5, 0.0001);
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
+
+        /// <summary>
+        /// Builds the hourly air quality should handle HTTP errors gracefully.
+        /// </summary>
+        [Fact]
+        public async Task BuildHourlyAirQuality_ShouldHandleHttpErrorsGracefully()
+        {
+            // Arrange - simulate HTTP error
+            var response = new HttpResponseMessage(HttpStatusCode.InternalServerError)
+            {
+                Content = new StringContent("Server Error", Encoding.UTF8, "text/plain")
+            };
+
+            ReplaceSharedHttpClient(new DelegatingHandlerStub(response));
+            try
+            {
+                var logger = NullLogger.Instance;
+
+                // Act
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 24, logger, CancellationToken.None);
+
+                // Assert - should handle error gracefully and return null
+                points.Should().BeNull();
+            }
+            finally
+            {
+                RestoreOriginalHttpClient();
+            }
+        }
+
+        #endregion
+    }
     }
