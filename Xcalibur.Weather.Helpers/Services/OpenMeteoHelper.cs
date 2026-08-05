@@ -366,13 +366,14 @@ namespace Xcalibur.Weather.Helpers.Services
         /// </summary>
         /// <param name="latitude">The latitude.</param>
         /// <param name="longitude">The longitude.</param>
-        /// <param name="forecastHours">The forecast hours.</param>
+        /// <param name="forecastDays">The forecast days.</param>
+        /// <param name="pastDays">The past days.</param>
         /// <param name="logger">The logger.</param>
         /// <param name="token">The token.</param>
         /// <returns></returns>
-        public static async Task<AirQualityPoint[]?> BuildHourlyAirQualityAsync(string latitude, string longitude, int forecastHours, ILogger logger, CancellationToken token)
+        public static async Task<AirQualityPoint[]?> BuildHourlyAirQualityAsync(string latitude, string longitude, int forecastDays, int pastDays, ILogger logger, CancellationToken token)
         {
-            var response = await GetHourlyAirQualityAsync(latitude, longitude, forecastHours, logger, token);
+            var response = await GetHourlyAirQualityAsync(latitude, longitude, forecastDays, pastDays, logger, token);
 
             // Hourly forecast must have a value to scroll.
             if (response?.Hourly is not { } data) return null;
@@ -403,16 +404,17 @@ namespace Xcalibur.Weather.Helpers.Services
         /// </summary>
         /// <param name="latitude">The latitude.</param>
         /// <param name="longitude">The longitude.</param>
-        /// <param name="forecastHours">The forecast hours.</param>
+        /// <param name="forecastDays">The forecast days.</param>
+        /// <param name="pastDays">The past days.</param>
         /// <param name="logger">The logger.</param>
         /// <param name="token">The token.</param>
         /// <returns></returns>
-        private static async Task<HourlyAirQualityResponse?> GetHourlyAirQualityAsync(string latitude, string longitude, int forecastHours, ILogger logger, CancellationToken token)
+        private static async Task<HourlyAirQualityResponse?> GetHourlyAirQualityAsync(string latitude, string longitude, int forecastDays, int pastDays, ILogger logger, CancellationToken token)
         {
             var service = new OpenMeteoService(_sharedHttpClient, logger);
 
             // Get the current weather for specific latitude and longitude.
-            return await service.GetHourlyAirQualityAsync(latitude, longitude, forecastHours, token);
+            return await service.GetHourlyAirQualityAsync(latitude, longitude, forecastDays, pastDays, token);
         }
 
         #endregion

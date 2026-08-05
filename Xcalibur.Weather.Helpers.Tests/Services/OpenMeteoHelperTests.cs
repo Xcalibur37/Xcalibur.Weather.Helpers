@@ -622,7 +622,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 var logger = NullLogger.Instance;
 
                 // Act
-                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 2, logger, CancellationToken.None);
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 2, 0, logger, CancellationToken.None);
 
                 // Assert
                 points.Should().NotBeNull();
@@ -672,7 +672,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 var logger = NullLogger.Instance;
 
                 // Act
-                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("0", "0", 24, logger, CancellationToken.None);
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("0", "0", 24, 0, logger, CancellationToken.None);
 
                 // Assert
                 points.Should().BeNull();
@@ -707,7 +707,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 var logger = NullLogger.Instance;
 
                 // Act
-                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 48, logger, CancellationToken.None);
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 48, 0, logger, CancellationToken.None);
 
                 // Assert
                 points.Should().BeNull();
@@ -753,7 +753,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 var logger = NullLogger.Instance;
 
                 // Act
-                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 24, logger, CancellationToken.None);
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 24, 0, logger, CancellationToken.None);
 
                 // Assert
                 points.Should().BeNull();
@@ -803,7 +803,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 var logger = NullLogger.Instance;
 
                 // Act
-                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 3, logger, CancellationToken.None);
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 3, 0, logger, CancellationToken.None);
 
                 // Assert
                 points.Should().NotBeNull();
@@ -866,7 +866,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 var logger = NullLogger.Instance;
 
                 // Act
-                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 96, logger, CancellationToken.None);
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 96, 0, logger, CancellationToken.None);
 
                 // Assert
                 points.Should().NotBeNull();
@@ -898,7 +898,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 var logger = NullLogger.Instance;
 
                 // Act
-                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 24, logger, CancellationToken.None);
+                var points = await OpenMeteoHelper.BuildHourlyAirQualityAsync("12.34", "56.78", 24, 0, logger, CancellationToken.None);
 
                 // Assert - should handle error gracefully and return null
                 points.Should().BeNull();

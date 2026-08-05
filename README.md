@@ -1,6 +1,6 @@
 # Xcalibur.Weather.Helpers
 
-![Version](https://img.shields.io/badge/version-1.0.21-blue)
+![Version](https://img.shields.io/badge/version-1.0.22-blue)
 ![.NET Version](https://img.shields.io/badge/.NET-10.0-blue)
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
@@ -36,7 +36,27 @@ This library is ideal for:
 - **Prototyping & MVPs**: Rapid development with high-level helper methods
 - **Web APIs**: REST services exposing weather data with built-in unit conversion
 
-## 🎉 What's New in v1.0.21
+## 🎉 What's New in v1.0.22
+
+**Historic Hourly Air Quality Support** - Expanded OpenMeteo air quality retrieval options:
+
+- ✅ **Historic Hourly Air Quality Retrieval**: `BuildHourlyAirQualityAsync` now supports both forecast and past-day ranges
+  - Added `forecastDays` and `pastDays` parameters for more flexible hourly air quality queries
+  - Supports retrieval of historic air quality data alongside forecasted data
+  - Improves range-based air quality analysis scenarios
+- ✅ **OpenMeteo Air Quality API Enhancements**: Hourly air quality requests now support broader date coverage
+  - Better support for historical and comparative air quality experiences
+  - Preserves current-hour mapping for returned hourly points
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.22
+- 🔗 **Maintained**: Dependency on Xcalibur.Weather.Models v1.0.21
+- 🧪 **Testing**: Updated affected hourly air quality tests for the new method signature
+- 📦 **Packaging**: Package references aligned for v1.0.22
+
+**Benefits**: Applications can now retrieve hourly air quality data across both forecast and recent historical periods, enabling richer charts, comparisons, and trend analysis.
+
+---
+
+### Previous Release - v1.0.21
 
 **Air Quality Index (AQI) Enhancements** - Comprehensive US and EU metrics support:
 
@@ -225,13 +245,13 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.21" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.22" />
 ```
 
 ## Requirements
 
 - **.NET 10.0** or later
-- **Xcalibur.Weather.Services 1.0.21** (included as dependency)
+- **Xcalibur.Weather.Services 1.0.22** (included as dependency)
 - **Microsoft.Extensions.Hosting 10.0.10** (included as dependency)
 
 ## Usage
@@ -887,12 +907,22 @@ Service helpers manage `HttpClient` usage internally, so callers can use the hel
 ## Dependencies
 
 This library depends on:
-- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.21) - Weather service providers and models
+- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.22) - Weather service providers and models
 - [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) (v10.0.10) - Hosting abstractions
 
 ## Changelog
 
-### Version 1.0.21 (Latest)
+### Version 1.0.22 (Latest)
+- ✨ **New**: Historic hourly air quality retrieval support
+  - `BuildHourlyAirQualityAsync` now accepts `forecastDays` and `pastDays`
+  - Supports retrieving historical and forecast hourly air quality data in a single flow
+  - Preserves current-hour detection for mapped `AirQualityPoint` results
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.22
+- 🔗 **Maintained**: Dependency on Xcalibur.Weather.Models v1.0.21
+- 🧪 **Testing**: Updated hourly air quality tests for the new method signature
+- 📦 **Packaging**: Package references synchronized for v1.0.22
+
+### Version 1.0.21
 - ✨ **New**: Air Quality Index (AQI) enhancements to account for US and EU metrics
   - Full US AQI support with individual pollutant tracking and health recommendations
   - Complete EU AQI implementation with European air quality standards
@@ -985,7 +1015,7 @@ Copyright © 2006 - 2026, Xcalibur Systems, LLC - All Rights Reserved
 
 ## Related Projects
 
-- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.0.21) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
+- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.0.22) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
 - **[Xcalibur.Weather.Models](https://www.nuget.org/packages/Xcalibur.Weather.Models/)** (v1.0.21) - Core weather data models and DTOs (included in Xcalibur.Weather.Services) ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Models))
 
 ---
