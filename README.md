@@ -1,6 +1,6 @@
 # Xcalibur.Weather.Helpers
 
-![Version](https://img.shields.io/badge/version-1.0.22-blue)
+![Version](https://img.shields.io/badge/version-1.0.23-blue)
 ![.NET Version](https://img.shields.io/badge/.NET-10.0-blue)
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
@@ -36,7 +36,28 @@ This library is ideal for:
 - **Prototyping & MVPs**: Rapid development with high-level helper methods
 - **Web APIs**: REST services exposing weather data with built-in unit conversion
 
-## 🎉 What's New in v1.0.22
+## 🎉 What's New in v1.0.23
+
+**Historic Data Retrieval for OpenMeteo Functions** - Comprehensive forecast and historical data support:
+
+- ✅ **Historic Forecast Support**: All OpenMeteo forecast functions now support historic data retrieval
+  - `BuildDailyForecastAsync` now accepts `forecastDays` and `pastDays` parameters
+  - `BuildHourlyForecastAsync` now accepts `forecastDays` and `pastDays` parameters
+  - Enables consistent API pattern across all OpenMeteo forecast methods
+- ✅ **Flexible Date Range Queries**: Query both future forecasts and historical weather data in a single call
+  - Supports time-series analysis across past and future dates
+  - Enables comparative studies and trend analysis
+  - Preserves current-hour/current-day marking in returned points
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.23
+- 🔗 **Maintained**: Dependency on Xcalibur.Weather.Models v1.0.21
+- 🧪 **Testing**: Updated all forecast tests for the new method signatures
+- 📦 **Packaging**: Package references aligned for v1.0.23
+
+**Benefits**: Applications can now seamlessly retrieve weather forecast data spanning both historical and future periods, enabling richer visualizations, comparisons, and analytics.
+
+---
+
+### Previous Release - v1.0.22
 
 **Historic Hourly Air Quality Support** - Expanded OpenMeteo air quality retrieval options:
 
@@ -245,13 +266,13 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.22" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.23" />
 ```
 
 ## Requirements
 
 - **.NET 10.0** or later
-- **Xcalibur.Weather.Services 1.0.22** (included as dependency)
+- **Xcalibur.Weather.Services 1.0.23** (included as dependency)
 - **Microsoft.Extensions.Hosting 10.0.10** (included as dependency)
 
 ## Usage
@@ -907,12 +928,23 @@ Service helpers manage `HttpClient` usage internally, so callers can use the hel
 ## Dependencies
 
 This library depends on:
-- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.22) - Weather service providers and models
+- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.23) - Weather service providers and models
 - [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) (v10.0.10) - Hosting abstractions
 
 ## Changelog
 
-### Version 1.0.22 (Latest)
+### Version 1.0.23 (Latest)
+- ✨ **New**: Historic data retrieval for all OpenMeteo forecast functions
+  - `BuildDailyForecastAsync` now accepts `forecastDays` and `pastDays` parameters
+  - `BuildHourlyForecastAsync` now accepts `forecastDays` and `pastDays` parameters
+  - Consistent API pattern across all OpenMeteo forecast methods
+  - Enables querying both future forecasts and historical weather data
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.23
+- 🔗 **Maintained**: Dependency on Xcalibur.Weather.Models v1.0.21
+- 🧪 **Testing**: Updated all forecast tests for the new method signatures
+- 📦 **Packaging**: Package references synchronized for v1.0.23
+
+### Version 1.0.22
 - ✨ **New**: Historic hourly air quality retrieval support
   - `BuildHourlyAirQualityAsync` now accepts `forecastDays` and `pastDays`
   - Supports retrieving historical and forecast hourly air quality data in a single flow
@@ -1015,7 +1047,7 @@ Copyright © 2006 - 2026, Xcalibur Systems, LLC - All Rights Reserved
 
 ## Related Projects
 
-- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.0.22) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
+- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.0.23) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
 - **[Xcalibur.Weather.Models](https://www.nuget.org/packages/Xcalibur.Weather.Models/)** (v1.0.21) - Core weather data models and DTOs (included in Xcalibur.Weather.Services) ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Models))
 
 ---

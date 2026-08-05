@@ -142,7 +142,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
             {
                 // Act
                 var logger = NullLogger.Instance;
-                var points = await OpenMeteoHelper.BuildDailyForecastAsync("12.34", "56.78", 2, logger, CancellationToken.None);
+                var points = await OpenMeteoHelper.BuildDailyForecastAsync("12.34", "56.78", 2, 0, logger, CancellationToken.None);
 
                 // Assert
                 points.Should().NotBeNull();
@@ -374,7 +374,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 // choose sunrise/sunset to make current point be daytime
                 var sunrise = new TimeOnly(6, 0);
                 var sunset = new TimeOnly(22, 0);
-                var points = await OpenMeteoHelper.BuildHourlyForecastAsync("12.34", "56.78", logger, CancellationToken.None);
+                var points = await OpenMeteoHelper.BuildHourlyForecastAsync("12.34", "56.78", 7, 0, logger, CancellationToken.None);
 
                 // Assert
                 points.Should().NotBeNull();
@@ -439,7 +439,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 try
                 {
                     var logger = NullLogger.Instance;
-                    var points = await OpenMeteoHelper.BuildDailyForecastAsync("0", "0", 1, logger, CancellationToken.None);
+                    var points = await OpenMeteoHelper.BuildDailyForecastAsync("0", "0", 1, 0, logger, CancellationToken.None);
 
                     points.Should().BeNull();
                 }
@@ -490,7 +490,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 try
                 {
                     var logger = NullLogger.Instance;
-                    var points = await OpenMeteoHelper.BuildDailyForecastAsync("0", "0", 0, logger, CancellationToken.None);
+                    var points = await OpenMeteoHelper.BuildDailyForecastAsync("0", "0", 0, 0, logger, CancellationToken.None);
 
                     points.Should().BeNull();
                 }
@@ -517,7 +517,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
                 try
                 {
                     var logger = NullLogger.Instance;
-                    var points = await OpenMeteoHelper.BuildHourlyForecastAsync("0", "0", logger, CancellationToken.None);
+                    var points = await OpenMeteoHelper.BuildHourlyForecastAsync("0", "0", 7, 0, logger, CancellationToken.None);
 
                     points.Should().BeNull();
                 }
