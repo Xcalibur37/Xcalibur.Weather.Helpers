@@ -36,7 +36,7 @@ This library is ideal for:
 - **Prototyping & MVPs**: Rapid development with high-level helper methods
 - **Web APIs**: REST services exposing weather data with built-in unit conversion
 
-## 🎉 What's New in v1.0.23
+## 🎉 What's New in v1.0.24
 
 **Historic Data Retrieval for OpenMeteo Functions** - Comprehensive forecast and historical data support:
 
@@ -48,10 +48,10 @@ This library is ideal for:
   - Supports time-series analysis across past and future dates
   - Enables comparative studies and trend analysis
   - Preserves current-hour/current-day marking in returned points
-- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.23
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.24
 - 🔗 **Maintained**: Dependency on Xcalibur.Weather.Models v1.0.21
 - 🧪 **Testing**: Updated all forecast tests for the new method signatures
-- 📦 **Packaging**: Package references aligned for v1.0.23
+- 📦 **Packaging**: Package references aligned for v1.0.24
 
 **Benefits**: Applications can now seamlessly retrieve weather forecast data spanning both historical and future periods, enabling richer visualizations, comparisons, and analytics.
 
@@ -266,13 +266,13 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.23" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.24" />
 ```
 
 ## Requirements
 
 - **.NET 10.0** or later
-- **Xcalibur.Weather.Services 1.0.23** (included as dependency)
+- **Xcalibur.Weather.Services 1.0.24** (included as dependency)
 - **Microsoft.Extensions.Hosting 10.0.10** (included as dependency)
 
 ## Usage
@@ -928,12 +928,12 @@ Service helpers manage `HttpClient` usage internally, so callers can use the hel
 ## Dependencies
 
 This library depends on:
-- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.23) - Weather service providers and models
+- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.24) - Weather service providers and models
 - [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) (v10.0.10) - Hosting abstractions
 
 ## Changelog
 
-### Version 1.0.23 (Latest)
+### Version 1.0.24 (Latest)
 - ✨ **New**: Historic data retrieval for all OpenMeteo forecast functions
   - `BuildDailyForecastAsync` now accepts `forecastDays` and `pastDays` parameters
   - `BuildHourlyForecastAsync` now accepts `forecastDays` and `pastDays` parameters
