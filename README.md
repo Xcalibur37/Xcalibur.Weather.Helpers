@@ -1,6 +1,6 @@
 # Xcalibur.Weather.Helpers
 
-![Version](https://img.shields.io/badge/version-1.0.23-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![.NET Version](https://img.shields.io/badge/.NET-10.0-blue)
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
@@ -36,7 +36,38 @@ This library is ideal for:
 - **Prototyping & MVPs**: Rapid development with high-level helper methods
 - **Web APIs**: REST services exposing weather data with built-in unit conversion
 
-## 🎉 What's New in v1.0.24
+## 🎉 What's New in v1.1.0
+
+**Observation, Timezone, and API Modernization Update** - Expanded helper coverage and cleaner public APIs:
+
+- ✅ **New `WeatherObservationHelper`**: Added simplified access to regional weather observation services
+  - `GetObservationAsync` for nearest observation lookup by string or numeric coordinates
+  - `GetMultipleObservationsAsync` for nearby observation lists
+  - `DetermineRegion` helpers for observation-region routing
+  - Regional convenience methods for NWS, ECCC, and METAR observation retrieval
+- ✅ **New `TimeZoneHelper`**: Added reusable timezone conversion extensions
+  - `ConvertFromTimezone` for local timezone conversions
+  - `ConvertFromTimezoneUtc` for UTC-based timezone conversions
+- ✅ **OpenMeteo Enhancements**: Expanded forecast capabilities and improved timezone-aware mapping
+  - New `BuildShortTermForecastAsync` for 15-minute forecast retrieval
+  - `BuildHourlyForecastAsync`, `BuildDailyForecastAsync`, and `BuildHourlyAirQualityAsync` support `forecastDays` and `pastDays`
+  - Current-day and current-hour mapping now use timezone-aware conversions
+- ✅ **OpenStreetMap Improvements**: Enhanced geocoding helper inputs
+  - `BuildAddressLocationsAsync` now accepts `languageCode` and `country`
+  - Better request filtering for localized and country-specific searches
+- ✅ **Weather Alert API Cleanup**: Streamlined public helper surface
+  - `BuildCombinedAlertsAsync`, `BuildCombinedAlertsConsolidatedAsync`, and `ConsolidateAlerts` remain the supported public APIs
+  - Consolidation logic keeps the highest-severity overlapping alert and logs consolidation decisions
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.1.0
+- 🔗 **Updated**: Dependency on Microsoft.Extensions.Hosting v10.0.11
+- 🧪 **Testing**: Added coverage for `WeatherObservationHelper` and `TimeZoneHelper`, and synchronized helper tests with the latest signatures
+- 📦 **Packaging**: README and package metadata aligned for v1.1.0
+
+**Benefits**: Applications can now retrieve observation data through a simple helper API, correctly map weather data across timezones, use more focused OpenStreetMap searches, and rely on a cleaner, consolidated alert surface.
+
+---
+
+### Previous Release - v1.0.24
 
 **Historic Data Retrieval for OpenMeteo Functions** - Comprehensive forecast and historical data support:
 
@@ -180,32 +211,26 @@ This library is ideal for:
 
 **Example:**
 ```csharp
-// Old way - might show duplicate alerts for the same weather event
-var alerts = await WeatherAlertHelper.BuildNwsAlertsAsync(lat, lon, logger, token);
+// Build a full combined alert payload
+var alerts = await WeatherAlertHelper.BuildCombinedAlertsAsync(lat, lon, logger, token);
 
-// New way - automatically consolidated, unique alerts only
-var consolidated = await WeatherAlertHelper.BuildNwsAlertsConsolidatedAsync(lat, lon, logger, token);
+// Or return only unique consolidated alerts for UI display
+var consolidated = await WeatherAlertHelper.BuildCombinedAlertsConsolidatedAsync(lat, lon, logger, token);
 foreach (var alert in consolidated)
 {
     Console.WriteLine($"[{alert.Severity}] {alert.Event}");
 }
 ```
 
-**Available Consolidated Methods:**
+**Available Consolidation APIs:**
 - `BuildCombinedAlertsConsolidatedAsync` - All providers combined
-- `BuildNwsAlertsConsolidatedAsync` - US weather alerts
-- `BuildMeteoalarmAlertsConsolidatedAsync` - European alerts
-- `BuildEnvironmentCanadaAlertsConsolidatedAsync` - Canadian alerts
-- `BuildBomAlertsConsolidatedAsync` - Australian alerts
-- `BuildGdacsAlertsConsolidatedAsync` - Global disaster alerts
-- `BuildDwdAlertsConsolidatedAsync` - German weather warnings
-- `BuildEmscAlertsConsolidatedAsync` - Earthquake/seismic alerts
+- `ConsolidateAlerts` - Manual consolidation for existing alert collections
 
 ## 📋 Table of Contents
 
 - [Purpose](#purpose)
 - [Use Cases](#-use-cases)
-- [What's New](#-whats-new-in-v1011)
+- [What's New](#-whats-new-in-v110)
 - [Features](#features)
   - [Conversion Utilities](#conversion-utilities)
   - [Weather Service Helpers](#weather-service-helpers)
@@ -243,14 +268,16 @@ foreach (var alert in consolidated)
 - **Smart Formatting**: Format values with or without unit symbols
 
 ### Weather Service Helpers
-- **OpenMeteoHelper**: Build air quality points, current forecasts, hourly forecasts, daily forecasts, and yesterday's data
+- **OpenMeteoHelper**: Build air quality points, current forecasts, short-term forecasts, hourly forecasts, daily forecasts, and yesterday's data
 - **GeocodioHelper**: Test API keys, build address locations from geocoding queries
 - **IpGeoHelper**: Build sun/moon points and test API connectivity for astronomical data
 - **AtmosporeHelper**: Test API keys, retrieve pollen forecasts from the Atmospore API
 - **SunriseSunsetHelper**: Fetch sunrise/sunset and astronomical data from SunriseSunset.io — no API key required
 - **OpenStreetMapHelper**: Geocode addresses using the OpenStreetMap Nominatim API — no API key required
 - **WeatherAlertHelper**: Build combined weather alert information from multiple global services (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD)
+- **WeatherObservationHelper**: Retrieve nearest and nearby weather observations with regional service routing
 - **WeatherRegionHelper**: Determine geographic regions, check if coordinates are in Germany, determine Canadian provinces and Australian states
+- **TimeZoneHelper**: Convert `DateTime` values using named timezone identifiers
 
 ## Installation
 
@@ -266,14 +293,14 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.0.24" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.1.0" />
 ```
 
 ## Requirements
 
 - **.NET 10.0** or later
-- **Xcalibur.Weather.Services 1.0.24** (included as dependency)
-- **Microsoft.Extensions.Hosting 10.0.10** (included as dependency)
+- **Xcalibur.Weather.Services 1.1.0** (included as dependency)
+- **Microsoft.Extensions.Hosting 10.0.11** (included as dependency)
 
 ## Usage
 
@@ -508,6 +535,7 @@ using Microsoft.Extensions.Logging;
 // Geocode an address — no API key required
 var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync(
     query: "1600 Pennsylvania Avenue NW, Washington, DC",
+    languageCode: "en",
     country: "US",
     logger: logger
 );
@@ -579,167 +607,64 @@ if (fullAlerts is not null)
     }
 }
 
-// Build alerts from specific services
-var meteoalarmAlerts = await WeatherAlertHelper.BuildMeteoalarmAlertsAsync(
-    latitude: "52.52",
-    longitude: "13.41",
-    logger: logger,
-    token: CancellationToken.None
-);
-
-var nwsAlerts = await WeatherAlertHelper.BuildNwsAlertsAsync(
-    latitude: "40.7128",
-    longitude: "-74.0060",
-    logger: logger,
-    token: CancellationToken.None
-);
-
-// NWS with automatic consolidation (for US locations)
-var nwsConsolidated = await WeatherAlertHelper.BuildNwsAlertsConsolidatedAsync(
-    latitude: "39.4300996",
-    longitude: "-77.804161",
-    logger: logger,
-    token: CancellationToken.None
-);
-
-// Clean and simple - just use the results directly
-foreach (var alert in nwsConsolidated)
-{
-    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
-}
-
-var gdacsAlerts = await WeatherAlertHelper.BuildGdacsAlertsAsync(
-    latitude: "35.6762",
-    longitude: "139.6503",
-    logger: logger,
-    token: CancellationToken.None
-);
-
-var canadaAlerts = await WeatherAlertHelper.BuildEnvironmentCanadaAlertsAsync(
+// Region-aware combined alerts are now the supported public alert API.
+// Use optional provinceCode/stateCode when you want to override automatic region detection.
+var canadaAlerts = await WeatherAlertHelper.BuildCombinedAlertsAsync(
     latitude: "43.65",
     longitude: "-79.38",
-    provinceCode: "ON",
     logger: logger,
-    token: CancellationToken.None
+    token: CancellationToken.None,
+    provinceCode: "ON"
 );
 
-// Environment Canada with automatic consolidation (for Canadian locations)
-var canadaConsolidated = await WeatherAlertHelper.BuildEnvironmentCanadaAlertsConsolidatedAsync(
-    latitude: "43.65",
-    longitude: "-79.38",
-    provinceCode: "ON",
-    logger: logger,
-    token: CancellationToken.None
-);
-
-foreach (var alert in canadaConsolidated)
-{
-    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
-}
-
-var bomAlerts = await WeatherAlertHelper.BuildBomAlertsAsync(
+var australiaAlerts = await WeatherAlertHelper.BuildCombinedAlertsAsync(
     latitude: "-33.87",
     longitude: "151.21",
-    stateCode: "NSW",
     logger: logger,
-    token: CancellationToken.None
+    token: CancellationToken.None,
+    stateCode: "NSW"
 );
 
-// BOM with automatic consolidation (for Australian locations)
-var bomConsolidated = await WeatherAlertHelper.BuildBomAlertsConsolidatedAsync(
-    latitude: "-33.87",
-    longitude: "151.21",
-    stateCode: "NSW",
-    logger: logger,
-    token: CancellationToken.None
-);
-
-foreach (var alert in bomConsolidated)
-{
-    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
-}
-
-var meteoalarmAlerts = await WeatherAlertHelper.BuildMeteoalarmAlertsAsync(
+// For UI display, prefer the consolidated list.
+var consolidated = await WeatherAlertHelper.BuildCombinedAlertsConsolidatedAsync(
     latitude: "52.52",
     longitude: "13.41",
     logger: logger,
     token: CancellationToken.None
 );
 
-// Meteoalarm with automatic consolidation (for European locations)
-var meteoalarmConsolidated = await WeatherAlertHelper.BuildMeteoalarmAlertsConsolidatedAsync(
-    latitude: "52.52",
-    longitude: "13.41",
-    logger: logger,
-    token: CancellationToken.None
-);
-
-foreach (var alert in meteoalarmConsolidated)
+foreach (var alert in consolidated)
 {
     Console.WriteLine($"[{alert.Severity}] {alert.Event}");
 }
+```
 
-var gdacsAlerts = await WeatherAlertHelper.BuildGdacsAlertsAsync(
-    latitude: "35.6762",
-    longitude: "139.6503",
-    logger: logger,
-    token: CancellationToken.None
-);
+### Weather Observation Helper
 
-// GDACS with automatic consolidation (for global disaster alerts)
-var gdacsConsolidated = await WeatherAlertHelper.BuildGdacsAlertsConsolidatedAsync(
-    latitude: "35.6762",
-    longitude: "139.6503",
-    logger: logger,
-    token: CancellationToken.None
-);
+```csharp
+using Xcalibur.Weather.Helpers.Services;
+using Microsoft.Extensions.Logging;
 
-foreach (var alert in gdacsConsolidated)
-{
-    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
-}
-
-var dwdAlerts = await WeatherAlertHelper.BuildDwdAlertsAsync(
-    latitude: "52.52",
-    longitude: "13.41",
-    logger: logger,
-    token: CancellationToken.None
-);
-
-// DWD with automatic consolidation (for German locations)
-var dwdConsolidated = await WeatherAlertHelper.BuildDwdAlertsConsolidatedAsync(
-    latitude: "52.52",
-    longitude: "13.41",
-    logger: logger,
-    token: CancellationToken.None
-);
-
-foreach (var alert in dwdConsolidated)
-{
-    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
-}
-
-var emscAlerts = await WeatherAlertHelper.BuildEmscAlertsAsync(
+// Get the nearest observation for coordinates
+var observation = await WeatherObservationHelper.GetObservationAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
-    radiusKm: 500,
     logger: logger,
-    token: CancellationToken.None
+    cancellationToken: CancellationToken.None
 );
 
-// EMSC with automatic consolidation (for earthquake/seismic alerts)
-var emscConsolidated = await WeatherAlertHelper.BuildEmscAlertsConsolidatedAsync(
+// Get several nearby observations
+var nearbyObservations = await WeatherObservationHelper.GetMultipleObservationsAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
-    radiusKm: 500,
+    maxResults: 5,
     logger: logger,
-    token: CancellationToken.None
+    cancellationToken: CancellationToken.None
 );
 
-foreach (var alert in emscConsolidated)
-{
-    Console.WriteLine($"[{alert.Severity}] {alert.Event}");
-}
+// Determine the observation routing region
+var observationRegion = WeatherObservationHelper.DetermineRegion("40.7128", "-74.0060");
+Console.WriteLine($"Observation Region: {observationRegion}");
 ```
 
 ### Weather Region Helper
@@ -800,11 +725,13 @@ Console.WriteLine($"State: {state}"); // Output: NSW
 | Method | Description |
 |--------|-------------|
 | `BuildAirQualityPointAsync(string, string, ILogger, CancellationToken)` | Retrieves and builds air quality data for coordinates |
-| `BuildCurrentForecastAsync(...)` | Retrieves and builds current weather forecast point |
-| `BuildHourlyForecastAsync(...)` | Retrieves and builds hourly forecast points |
-| `BuildDailyForecastAsync(string, string, int, ILogger, CancellationToken)` | Retrieves and builds daily forecast points |
-| `BuildYesterdayHourlyForecastAsync(...)` | Retrieves and builds yesterday's hourly forecast |
-| `BuildYesterdayDailyForecastAsync(string, string, ILogger, CancellationToken)` | Retrieves and builds yesterday's daily forecast |
+| `BuildCurrentForecastAsync(string, string, ILogger, CancellationToken)` | Retrieves and builds current weather forecast point |
+| `BuildShortTermForecastAsync(string, string, ILogger, CancellationToken)` | Retrieves and builds 15-minute forecast points |
+| `BuildHourlyForecastAsync(string, string, int, int, ILogger, CancellationToken)` | Retrieves and builds hourly forecast points across forecast and past-day ranges |
+| `BuildDailyForecastAsync(string, string, int, int, ILogger, CancellationToken)` | Retrieves and builds daily forecast points across forecast and past-day ranges |
+| `BuildYesterdayHourlyForecastAsync(string, string, string, ILogger, CancellationToken)` | Retrieves and builds yesterday's hourly forecast |
+| `BuildYesterdayDailyForecastAsync(string, string, string, string, ILogger, CancellationToken)` | Retrieves and builds yesterday's daily forecast |
+| `BuildHourlyAirQualityAsync(string, string, int, int, ILogger, CancellationToken)` | Retrieves and builds hourly air-quality points across forecast and past-day ranges |
 
 ### GeocodioHelper
 
@@ -837,7 +764,7 @@ Console.WriteLine($"State: {state}"); // Output: NSW
 
 | Method | Description |
 |--------|-------------|
-| `BuildAddressLocationsAsync(string, string, ILogger?)` | Geocodes an address query via OpenStreetMap Nominatim and returns location models — no API key required |
+| `BuildAddressLocationsAsync(string, string?, string?, ILogger?)` | Geocodes an address query via OpenStreetMap Nominatim with optional language and country filtering — no API key required |
 
 ### WeatherAlertHelper
 
@@ -846,20 +773,29 @@ Console.WriteLine($"State: {state}"); // Output: NSW
 | `BuildCombinedAlertsAsync(string, string, ILogger, CancellationToken, string?, string?)` | Aggregates weather alerts from multiple global sources (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD) into a unified `CombinedWeatherAlertInformation` model. Intelligently selects services based on geographic location. Optional `provinceCode` for Canada and `stateCode` for Australia. |
 | `BuildCombinedAlertsConsolidatedAsync(...)` | **Recommended for UI display.** Returns only the consolidated alerts list, removing overlapping duplicates and keeping the highest severity alert from each group. Returns an empty list if no alerts exist. Clean, simple API. |
 | `ConsolidateAlerts(IEnumerable<WeatherAlertItem>, ILogger?)` | Consolidates a collection of alerts by removing overlapping duplicates and keeping the highest severity alert from each group. Use this for manual consolidation when you need access to the full `CombinedWeatherAlertInformation` object. |
-| `BuildMeteoalarmAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves alerts from Meteoalarm (Europe) |
-| `BuildMeteoalarmAlertsConsolidatedAsync(string, string, ILogger, CancellationToken)` | **Recommended for Europe.** Retrieves alerts from Meteoalarm with automatic consolidation. Returns a list of unique, consolidated alerts. |
-| `BuildNwsAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves alerts from the US National Weather Service |
-| `BuildNwsAlertsConsolidatedAsync(string, string, ILogger, CancellationToken)` | **Recommended for US.** Retrieves alerts from NWS with automatic consolidation. Returns a list of unique, consolidated alerts. |
-| `BuildGdacsAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves global disaster alerts from GDACS |
-| `BuildGdacsAlertsConsolidatedAsync(string, string, ILogger, CancellationToken)` | **Recommended for global disasters.** Retrieves alerts from GDACS with automatic consolidation. Returns a list of unique, consolidated alerts. |
-| `BuildEnvironmentCanadaAlertsAsync(string, string, string, ILogger, CancellationToken)` | Retrieves alerts from Environment Canada (requires province code) |
-| `BuildEnvironmentCanadaAlertsConsolidatedAsync(string, string, string, ILogger, CancellationToken)` | **Recommended for Canada.** Retrieves alerts from Environment Canada with automatic consolidation. Returns a list of unique, consolidated alerts. |
-| `BuildBomAlertsAsync(string, string, string, ILogger, CancellationToken)` | Retrieves alerts from the Australian Bureau of Meteorology (requires state code) |
-| `BuildBomAlertsConsolidatedAsync(string, string, string, ILogger, CancellationToken)` | **Recommended for Australia.** Retrieves alerts from BOM with automatic consolidation. Returns a list of unique, consolidated alerts. |
-| `BuildDwdAlertsAsync(string, string, ILogger, CancellationToken)` | Retrieves alerts from the German weather service (DWD) |
-| `BuildDwdAlertsConsolidatedAsync(string, string, ILogger, CancellationToken)` | **Recommended for Germany.** Retrieves alerts from DWD with automatic consolidation. Returns a list of unique, consolidated alerts. |
-| `BuildEmscAlertsAsync(string, string, int, ILogger, CancellationToken)` | Retrieves earthquake/seismic alerts from EMSC within specified radius (in km) |
-| `BuildEmscAlertsConsolidatedAsync(string, string, int, ILogger, CancellationToken)` | **Recommended for earthquakes.** Retrieves alerts from EMSC with automatic consolidation. Returns a list of unique, consolidated alerts. |
+
+### WeatherObservationHelper
+
+| Method | Description |
+|--------|-------------|
+| `GetObservationAsync(string, string, ILogger, CancellationToken)` | Retrieves the nearest observation using string coordinates |
+| `GetObservationAsync(double, double, ILogger, CancellationToken)` | Retrieves the nearest observation using numeric coordinates |
+| `GetMultipleObservationsAsync(string, string, int, ILogger, CancellationToken)` | Retrieves multiple nearby observations using string coordinates |
+| `GetMultipleObservationsAsync(double, double, int, ILogger, CancellationToken)` | Retrieves multiple nearby observations using numeric coordinates |
+| `DetermineRegion(string, string)` | Determines the observation region from string coordinates |
+| `DetermineRegion(double, double)` | Determines the observation region from numeric coordinates |
+| `GetNwsObservationAsync(double, double, ILogger, CancellationToken)` | Retrieves an observation from NWS directly |
+| `GetEcccObservationAsync(double, double, ILogger, CancellationToken)` | Retrieves an observation from ECCC directly |
+| `GetMetarObservationAsync(double, double, ILogger, CancellationToken)` | Retrieves an observation from METAR directly |
+
+### TimeZoneHelper
+
+| Method | Description |
+|--------|-------------|
+| `ConvertFromTimezone(DateTime?, string?)` | Converts a nullable `DateTime` using the provided timezone |
+| `ConvertFromTimezone(DateTime, string?)` | Converts a `DateTime` using the provided timezone |
+| `ConvertFromTimezoneUtc(DateTime?, string?)` | Converts a nullable UTC `DateTime` from UTC into the provided timezone |
+| `ConvertFromTimezoneUtc(DateTime, string?)` | Converts a UTC `DateTime` from UTC into the provided timezone |
 
 ### WeatherRegionHelper
 
@@ -928,21 +864,36 @@ Service helpers manage `HttpClient` usage internally, so callers can use the hel
 ## Dependencies
 
 This library depends on:
-- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.0.24) - Weather service providers and models
-- [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) (v10.0.10) - Hosting abstractions
+- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.1.0) - Weather service providers and models
+- [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) (v10.0.11) - Hosting abstractions
 
 ## Changelog
 
-### Version 1.0.24 (Latest)
+### Version 1.1.0 (Latest)
+- ✨ **New**: `WeatherObservationHelper` for nearest and nearby observation retrieval
+  - Supports string and numeric coordinates
+  - Adds region detection for observation routing
+  - Includes direct NWS, ECCC, and METAR observation helpers
+- ✨ **New**: `TimeZoneHelper` extension methods for timezone conversion
+- ✨ **New**: `BuildShortTermForecastAsync` for 15-minute OpenMeteo forecasts
+- 🔄 **Improved**: OpenMeteo helpers now use timezone-aware current-day/current-hour mapping
+- 🔄 **Improved**: `OpenStreetMapHelper.BuildAddressLocationsAsync` now accepts optional `languageCode` and `country`
+- 🧹 **Changed**: `WeatherAlertHelper` public API is centered on combined aggregation and consolidation methods
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.1.0
+- 🔗 **Updated**: Dependency on Microsoft.Extensions.Hosting v10.0.11
+- 🧪 **Testing**: Added tests for `WeatherObservationHelper` and `TimeZoneHelper`, and synchronized helper tests with current signatures
+- 📦 **Packaging**: Package metadata and README synchronized for v1.1.0
+
+### Version 1.0.24
 - ✨ **New**: Historic data retrieval for all OpenMeteo forecast functions
   - `BuildDailyForecastAsync` now accepts `forecastDays` and `pastDays` parameters
   - `BuildHourlyForecastAsync` now accepts `forecastDays` and `pastDays` parameters
   - Consistent API pattern across all OpenMeteo forecast methods
   - Enables querying both future forecasts and historical weather data
-- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.23
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.0.24
 - 🔗 **Maintained**: Dependency on Xcalibur.Weather.Models v1.0.21
 - 🧪 **Testing**: Updated all forecast tests for the new method signatures
-- 📦 **Packaging**: Package references synchronized for v1.0.23
+- 📦 **Packaging**: Package references synchronized for v1.0.24
 
 ### Version 1.0.22
 - ✨ **New**: Historic hourly air quality retrieval support
@@ -1047,8 +998,7 @@ Copyright © 2006 - 2026, Xcalibur Systems, LLC - All Rights Reserved
 
 ## Related Projects
 
-- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.0.23) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
-- **[Xcalibur.Weather.Models](https://www.nuget.org/packages/Xcalibur.Weather.Models/)** (v1.0.21) - Core weather data models and DTOs (included in Xcalibur.Weather.Services) ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Models))
+- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.1.0) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
 
 ---
 

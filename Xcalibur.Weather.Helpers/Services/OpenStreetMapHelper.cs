@@ -23,6 +23,7 @@ namespace Xcalibur.Weather.Helpers.Services
         /// mapped to <see cref="AddressLocationModel" />.
         /// </summary>
         /// <param name="query">Free-form address or place query.</param>
+        /// <param name="languageCode">The language code.</param>
         /// <param name="country">The country.</param>
         /// <param name="logger">Optional logger.</param>
         /// <returns>
@@ -30,17 +31,20 @@ namespace Xcalibur.Weather.Helpers.Services
         /// are found.
         /// </returns>
         public static async Task<AddressLocationModel[]?> BuildAddressLocationsAsync(
-            string query, string country, ILogger? logger = null)
+            string query, string? languageCode, string? country, ILogger? logger = null)
         {
-            var results = await GetLocationsAsync(query, country, logger);
+            // Validate input parameters.
+            var results = await GetLocationsAsync(query, languageCode, country, logger);
+
+            // If no results are found, return null.
             if (results is not { Count: > 0 }) return null;
 
+            // Map the results to AddressLocationModel instances.
             var locations = new AddressLocationModel[results.Count];
             for (var i = 0; i < results.Count; i++)
             {
                 locations[i] = new AddressLocationModel(results[i]);
             }
-
             return locations;
         }
 
@@ -48,17 +52,18 @@ namespace Xcalibur.Weather.Helpers.Services
         /// Gets the locations asynchronous.
         /// </summary>
         /// <param name="query">The query.</param>
+        /// <param name="languageCode">The language code.</param>
         /// <param name="country">The country.</param>
         /// <param name="logger">The logger.</param>
         /// <returns></returns>
-        private static async Task<List<OpenStreetMapResultResponse>?> GetLocationsAsync(string query, string country, ILogger? logger)
+        private static async Task<List<OpenStreetMapResultResponse>?> GetLocationsAsync(string query, string? languageCode, string? country, ILogger? logger)
         {
             // Create a new service instance for each call to ensure thread safety, but reuse the shared HttpClient.
             var service = CreateService(logger);
 
             // Use a cancellation token to prevent hanging indefinitely if the service is unresponsive.
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            return await service.GetLocationsAsync(query, country, cts.Token);
+            return await service.GetLocationsAsync(query,  languageCode,country, cts.Token);
         }
 
         /// <summary>

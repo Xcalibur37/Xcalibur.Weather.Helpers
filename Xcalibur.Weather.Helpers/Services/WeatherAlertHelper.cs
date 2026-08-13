@@ -68,11 +68,11 @@ namespace Xcalibur.Weather.Helpers.Services
             DwdAlertsResponse? dwd = null;
             EmscAlertsResponse? emsc = null;
 
-            // Global services - always call these
+            // Global services - always call these (with localized radius)
             var tasks = new List<Task>
             {
                 Task.Run(async () => gdacs = await GetGdacsAlertsAsync(latitude, longitude, logger, token), token),
-                Task.Run(async () => emsc = await GetEmscAlertsAsync(latitude, longitude, 500, logger, token), token)
+                Task.Run(async () => emsc = await GetEmscAlertsAsync(latitude, longitude, 300, logger, token), token)
             };
 
             // Regional services - call based on location
@@ -160,79 +160,22 @@ namespace Xcalibur.Weather.Helpers.Services
         /// </code>
         /// </example>
         public static async Task<IReadOnlyList<WeatherAlertItem>> BuildCombinedAlertsConsolidatedAsync(
-            string latitude,
-            string longitude,
-            ILogger logger,
-            CancellationToken token,
-            string? provinceCode = null,
-            string? stateCode = null)
+            string latitude, string longitude, ILogger logger, CancellationToken token, string? provinceCode = null, string? stateCode = null)
         {
             // Get combined alerts
             var combined = await BuildCombinedAlertsAsync(latitude, longitude, logger, token, provinceCode, stateCode);
 
             // If no alerts are available, return empty list
-            if (combined is null || combined.Alerts.Count == 0)
-            {
-                logger.LogDebug("No alerts available for consolidation");
-                return [];
-            }
+            if (combined is not null && combined.Alerts.Count != 0) return ConsolidateAlerts(combined.Alerts, logger);
+            logger.LogDebug("No alerts available for consolidation");
+            return [];
 
             // Consolidate overlapping alerts and return
-            return ConsolidateAlerts(combined.Alerts, logger);
         }
 
         #endregion
 
         #region Meteoalarm Alerts
-
-        /// <summary>
-        /// Builds weather alerts from Meteoalarm only.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>Combined weather alert information with Meteoalarm data only.</returns>
-        public static async Task<CombinedWeatherAlertInformation?> BuildMeteoalarmAlertsAsync(
-            string latitude, string longitude, ILogger logger, CancellationToken token)
-        {
-            // Get Meteoalarm alerts for the given coordinates
-            var meteoalarm = await GetMeteoalarmAlertsAsync(latitude, longitude, logger, token);
-
-            // If Meteoalarm alerts are found, return them in a CombinedWeatherAlertInformation object
-            if (meteoalarm is null)
-            {
-                logger.LogDebug("No Meteoalarm alerts available for ({Latitude}, {Longitude})", latitude, longitude);
-                return null;
-            }
-
-            // Return a CombinedWeatherAlertInformation object with only Meteoalarm data populated
-            return new CombinedWeatherAlertInformation(meteoalarm, null, null, null, null, null, null, latitude, longitude);
-
-        }
-
-        /// <summary>
-        /// Builds weather alerts from Meteoalarm with automatic consolidation.
-        /// Consolidates overlapping alerts of the same event type, keeping only the highest severity alert.
-        /// Recommended for UI display to avoid showing duplicate alerts.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>
-        /// A consolidated list of Meteoalarm weather alerts with overlapping duplicates removed.
-        /// Returns an empty list if no alerts are available.
-        /// </returns>
-        public static async Task<IReadOnlyList<WeatherAlertItem>> BuildMeteoalarmAlertsConsolidatedAsync(
-            string latitude, string longitude, ILogger logger, CancellationToken token)
-        {
-            // Get combined Meteoalarm alerts for the given coordinates
-            var combined = await BuildMeteoalarmAlertsAsync(latitude, longitude, logger, token);
-
-            // If no alerts are available, return an empty list
-            return combined is null || combined.Alerts.Count == 0 ? [] : ConsolidateAlerts(combined.Alerts, logger);
-        }
 
         /// <summary>
         /// Gets alerts from Meteoalarm API only.
@@ -251,56 +194,6 @@ namespace Xcalibur.Weather.Helpers.Services
         #region NWS Alerts
 
         /// <summary>
-        /// Builds weather alerts from NWS only.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>Combined weather alert information with NWS data only.</returns>
-        public static async Task<CombinedWeatherAlertInformation?> BuildNwsAlertsAsync(
-            string latitude, string longitude, ILogger logger, CancellationToken token)
-        {
-            // Get NWS alerts for the given coordinates
-            var nws = await GetNwsAlertsAsync(latitude, longitude, logger, token);
-
-            // If NWS alerts are found, return them in a CombinedWeatherAlertInformation object
-            if (nws is null)
-            {
-                logger.LogDebug("No NWS alerts available for ({Latitude}, {Longitude})",
-                    latitude, longitude);
-                return null;
-            }
-
-            // Return a CombinedWeatherAlertInformation object with only NWS data populated
-            return new CombinedWeatherAlertInformation(null, nws, null, null, null, null, null, latitude, longitude);
-
-        }
-
-        /// <summary>
-        /// Builds weather alerts from NWS and returns consolidated alerts.
-        /// This is a convenience method for NWS-only alerts that automatically consolidates
-        /// overlapping alerts of the same event type.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>
-        /// A consolidated list of NWS weather alerts with overlapping duplicates removed.
-        /// Returns an empty list if no alerts are available.
-        /// </returns>
-        public static async Task<IReadOnlyList<WeatherAlertItem>> BuildNwsAlertsConsolidatedAsync(
-            string latitude, string longitude, ILogger logger, CancellationToken token)
-        {
-            // Get combined NWS alerts for the given coordinates
-            var combined = await BuildNwsAlertsAsync(latitude, longitude, logger, token);
-
-            // If no alerts are available, return an empty list
-            return combined is null || combined.Alerts.Count == 0 ? [] : ConsolidateAlerts(combined.Alerts, logger);
-        }
-
-        /// <summary>
         /// Gets alerts from NWS API only.
         /// </summary>
         /// <param name="latitude">The latitude.</param>
@@ -317,59 +210,6 @@ namespace Xcalibur.Weather.Helpers.Services
         #region GDACS Alerts
 
         /// <summary>
-        /// Builds weather alerts from GDACS only.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>Combined weather alert information with GDACS data only.</returns>
-        public static async Task<CombinedWeatherAlertInformation?> BuildGdacsAlertsAsync(
-            string latitude, string longitude, ILogger logger, CancellationToken token)
-        {
-            // Log the start of the GDACS alert building process with the provided coordinates
-            var gdacs = await GetGdacsAlertsAsync(latitude, longitude, logger, token);
-
-            // If GDACS alerts are found, return them in a CombinedWeatherAlertInformation object
-            if (gdacs is null)
-            {
-                logger.LogDebug("No GDACS alerts available for ({Latitude}, {Longitude})",
-                    latitude, longitude);
-                return null;
-            }
-
-            // Log that no GDACS alerts were found for the given coordinates
-            return new CombinedWeatherAlertInformation(null, null, gdacs, null, null, null, null, latitude, longitude);
-
-        }
-
-        /// <summary>
-        /// Builds weather alerts from GDACS with automatic consolidation.
-        /// Consolidates overlapping alerts of the same event type, keeping only the highest severity alert.
-        /// Recommended for UI display to avoid showing duplicate alerts.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>
-        /// A consolidated list of GDACS weather alerts with overlapping duplicates removed.
-        /// Returns an empty list if no alerts are available.
-        /// </returns>
-        public static async Task<IReadOnlyList<WeatherAlertItem>> BuildGdacsAlertsConsolidatedAsync(
-            string latitude, string longitude, ILogger logger, CancellationToken token)
-        {
-            var combined = await BuildGdacsAlertsAsync(latitude, longitude, logger, token);
-
-            if (combined is null || !combined.Alerts.Any())
-            {
-                return Array.Empty<WeatherAlertItem>();
-            }
-
-            return ConsolidateAlerts(combined.Alerts, logger);
-        }
-
-        /// <summary>
         /// Gets alerts from GDACS API only.
         /// </summary>
         /// <param name="latitude">The latitude.</param>
@@ -384,58 +224,6 @@ namespace Xcalibur.Weather.Helpers.Services
         #endregion
 
         #region Environment Canada Alerts
-
-        /// <summary>
-        /// Builds weather alerts from Environment Canada only.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="provinceCode">The province/territory code (e.g., 'on', 'bc', 'ab').</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>Combined weather alert information with Environment Canada data only.</returns>
-        public static async Task<CombinedWeatherAlertInformation?> BuildEnvironmentCanadaAlertsAsync(
-            string latitude, string longitude, string provinceCode, ILogger logger, CancellationToken token)
-        {
-            // Get Environment Canada alerts for the given coordinates and province
-            var envCanada = await GetEnvironmentCanadaAlertsAsync(latitude, longitude, provinceCode, logger, token);
-
-            // If Environment Canada alerts are found, return them in a CombinedWeatherAlertInformation object
-            if (envCanada is not null)
-            {
-                return new CombinedWeatherAlertInformation(null, null, null, envCanada, null, null, null, latitude, longitude);
-            }
-
-            // Log that no Environment Canada alerts were found for the given coordinates and province
-            logger.LogDebug("No Environment Canada alerts available for ({Latitude}, {Longitude}) in province {ProvinceCode}",
-                latitude, longitude, provinceCode);
-            return null;
-
-        }
-
-        /// <summary>
-        /// Builds weather alerts from Environment Canada with automatic consolidation.
-        /// Consolidates overlapping alerts of the same event type, keeping only the highest severity alert.
-        /// Recommended for UI display to avoid showing duplicate alerts.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="provinceCode">The province/territory code (e.g., 'on', 'bc', 'ab').</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>
-        /// A consolidated list of Environment Canada weather alerts with overlapping duplicates removed.
-        /// Returns an empty list if no alerts are available.
-        /// </returns>
-        public static async Task<IReadOnlyList<WeatherAlertItem>> BuildEnvironmentCanadaAlertsConsolidatedAsync(
-            string latitude, string longitude, string provinceCode, ILogger logger, CancellationToken token)
-        {
-            // Get combined Environment Canada alerts for the given coordinates and province
-            var combined = await BuildEnvironmentCanadaAlertsAsync(latitude, longitude, provinceCode, logger, token);
-
-            // If no alerts are available, return an empty list
-            return combined is null || combined.Alerts.Count == 0 ? [] : ConsolidateAlerts(combined.Alerts, logger);
-        }
 
         /// <summary>
         /// Gets alerts from Environment Canada API only.
@@ -457,60 +245,6 @@ namespace Xcalibur.Weather.Helpers.Services
         #region BOM Alerts
 
         /// <summary>
-        /// Builds weather alerts from BOM Australia only.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="stateCode">The state/territory code (e.g., 'nsw', 'vic', 'qld').</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>
-        /// Combined weather alert information with BOM data only.
-        /// </returns>
-        public static async Task<CombinedWeatherAlertInformation?> BuildBomAlertsAsync(
-            string latitude, string longitude, string stateCode, ILogger logger, CancellationToken token)
-        {
-            // Get BOM alerts for the given coordinates and state
-            var bom = await GetBomAlertsAsync(latitude, longitude, stateCode, logger, token);
-
-            // If BOM alerts are found, return them in a CombinedWeatherAlertInformation object
-            if (bom is not null)
-            {
-                return new CombinedWeatherAlertInformation(null, null, null, null, bom, null, null, latitude, longitude);
-            }
-
-            // Log that no BOM alerts were found for the given coordinates and state
-            logger.LogDebug("No BOM alerts available for ({Latitude}, {Longitude}) in state {StateCode}",
-                latitude, longitude, stateCode);
-            return null;
-
-        }
-
-        /// <summary>
-        /// Builds weather alerts from BOM Australia with automatic consolidation.
-        /// Consolidates overlapping alerts of the same event type, keeping only the highest severity alert.
-        /// Recommended for UI display to avoid showing duplicate alerts.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="stateCode">The state/territory code (e.g., 'nsw', 'vic', 'qld').</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>
-        /// A consolidated list of BOM weather alerts with overlapping duplicates removed.
-        /// Returns an empty list if no alerts are available.
-        /// </returns>
-        public static async Task<IReadOnlyList<WeatherAlertItem>> BuildBomAlertsConsolidatedAsync(
-            string latitude, string longitude, string stateCode, ILogger logger, CancellationToken token)
-        {
-            // Get combined BOM alerts for the given coordinates and state
-            var combined = await BuildBomAlertsAsync(latitude, longitude, stateCode, logger, token);
-
-            // If no alerts are available, return an empty list
-            return combined is null || combined.Alerts.Count == 0 ? [] : ConsolidateAlerts(combined.Alerts, logger);
-        }
-
-        /// <summary>
         /// Gets alerts from BOM Australia API only.
         /// </summary>
         /// <param name="latitude">The latitude.</param>
@@ -530,54 +264,6 @@ namespace Xcalibur.Weather.Helpers.Services
         #region DWD Alerts
 
         /// <summary>
-        /// Builds weather warning information from DWD (Deutscher Wetterdienst - German Weather Service).
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>
-        /// DWD alerts response or null.
-        /// </returns>
-        public static async Task<DwdAlertsResponse?> BuildDwdAlertsAsync(
-            string latitude, string longitude, ILogger logger, CancellationToken token)
-        {
-            // Log the start of the DWD alert building process with the provided coordinates
-            logger.LogInformation("Building DWD weather warnings for ({Latitude}, {Longitude})", latitude, longitude);
-
-            // Call the private method to get DWD alerts and return the result
-            return await GetDwdAlertsAsync(latitude, longitude, logger, token);
-        }
-
-        /// <summary>
-        /// Builds weather warning information from DWD with automatic consolidation.
-        /// Consolidates overlapping alerts of the same event type, keeping only the highest severity alert.
-        /// Recommended for UI display to avoid showing duplicate alerts.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>
-        /// A consolidated list of DWD weather alerts with overlapping duplicates removed.
-        /// Returns an empty list if no alerts are available.
-        /// </returns>
-        public static async Task<IReadOnlyList<WeatherAlertItem>> BuildDwdAlertsConsolidatedAsync(
-            string latitude, string longitude, ILogger logger, CancellationToken token)
-        {
-            var response = await BuildDwdAlertsAsync(latitude, longitude, logger, token);
-
-            // If no alerts are available, return an empty list
-            if (response is null) return [];
-
-            // Wrap DWD response in CombinedWeatherAlertInformation to access Alerts collection
-            var combined = new CombinedWeatherAlertInformation(null, null, null, null, null, null, response, latitude, longitude);
-
-            // If no alerts are available, return an empty list
-            return combined.Alerts.Count == 0 ? [] : ConsolidateAlerts(combined.Alerts, logger);
-        }
-
-        /// <summary>
         /// Gets alerts from DWD API only.
         /// </summary>
         /// <param name="latitude">The latitude.</param>
@@ -594,57 +280,6 @@ namespace Xcalibur.Weather.Helpers.Services
         #endregion
 
         #region EMSC Alerts
-
-        /// <summary>
-        /// Builds earthquake alert information from EMSC (European-Mediterranean Seismological Centre).
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="radiusKm">The search radius in kilometers (default: 500).</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>
-        /// EMSC alerts response or null.
-        /// </returns>
-        public static async Task<EmscAlertsResponse?> BuildEmscAlertsAsync(
-            string latitude, string longitude, int radiusKm, ILogger logger, CancellationToken token)
-        {
-            // Log the start of the EMSC alert building process with the provided coordinates and radius
-            logger.LogInformation("Building EMSC earthquake alerts for ({Latitude}, {Longitude}) within {Radius}km", latitude, longitude, radiusKm);
-
-            // Call the private method to get EMSC alerts and return the result
-            return await GetEmscAlertsAsync(latitude, longitude, radiusKm, logger, token);
-        }
-
-        /// <summary>
-        /// Builds earthquake alert information from EMSC with automatic consolidation.
-        /// Consolidates overlapping alerts of the same event type, keeping only the highest severity alert.
-        /// Recommended for UI display to avoid showing duplicate alerts.
-        /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
-        /// <param name="radiusKm">The search radius in kilometers (default: 500).</param>
-        /// <param name="logger">The logger.</param>
-        /// <param name="token">The cancellation token.</param>
-        /// <returns>
-        /// A consolidated list of EMSC earthquake alerts with overlapping duplicates removed.
-        /// Returns an empty list if no alerts are available.
-        /// </returns>
-        public static async Task<IReadOnlyList<WeatherAlertItem>> BuildEmscAlertsConsolidatedAsync(
-            string latitude, string longitude, int radiusKm, ILogger logger, CancellationToken token)
-        {
-            // Get combined EMSC alerts for the given coordinates and radius
-            var response = await BuildEmscAlertsAsync(latitude, longitude, radiusKm, logger, token);
-
-            // If no alerts are available, return an empty list
-            if (response is null) return [];
-
-            // Wrap EMSC response in CombinedWeatherAlertInformation to access Alerts collection
-            var combined = new CombinedWeatherAlertInformation(null, null, null, null, null, response, null, latitude, longitude);
-
-            // If no alerts are available, return an empty list
-            return combined.Alerts.Count == 0 ? [] : ConsolidateAlerts(combined.Alerts, logger);
-        }
 
         /// <summary>
         /// Gets alerts from EMSC API only.

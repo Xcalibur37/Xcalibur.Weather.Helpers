@@ -80,7 +80,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
             {
                 // Act
                 var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync(
-                    "1600 Pennsylvania Avenue NW, Washington, DC", "US");
+                    "1600 Pennsylvania Avenue NW, Washington, DC", null, "US");
 
                 // Assert
                 locations.Should().NotBeNull();
@@ -139,7 +139,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
             try
             {
                 // Act
-                var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync("Westminster, London", "GB");
+                var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync("Westminster, London", null, "GB");
 
                 // Assert
                 locations.Should().NotBeNull();
@@ -165,7 +165,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
             try
             {
                 // Act
-                var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync("nonexistent place xyz", "US");
+                var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync("nonexistent place xyz", null, "US");
 
                 // Assert
                 locations.Should().BeNull();
@@ -187,7 +187,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
             try
             {
                 // Act
-                var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync("query", "US");
+                var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync("query", null, "US");
 
                 // Assert
                 locations.Should().BeNull();
@@ -212,7 +212,7 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
             try
             {
                 // Act
-                var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync("query", "US");
+                var locations = await OpenStreetMapHelper.BuildAddressLocationsAsync("query", null, "US");
 
                 // Assert
                 locations.Should().BeNull();

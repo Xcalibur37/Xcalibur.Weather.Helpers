@@ -6,6 +6,7 @@ using Xcalibur.Weather.Models.Services.OpenMeteo.CurrentWeather;
 using Xcalibur.Weather.Models.Services.OpenMeteo.DailyWeather;
 using Xcalibur.Weather.Models.Services.OpenMeteo.HourlyAirQuality;
 using Xcalibur.Weather.Models.Services.OpenMeteo.HourlyWeather;
+using Xcalibur.Weather.Models.Services.OpenMeteo.ShortTermForecast;
 using Xcalibur.Weather.Services;
 
 namespace Xcalibur.Weather.Helpers.Services
@@ -38,7 +39,7 @@ namespace Xcalibur.Weather.Helpers.Services
             // Hourly forecast must have a value to scroll.
             return currentWeatherResponse?.Current is not { } data
                 ? null
-                : new DetailedForecastPoint(data);
+                : new DetailedForecastPoint(data, currentWeatherResponse?.Timezone);
         }
 
         /// <summary>
@@ -55,6 +56,51 @@ namespace Xcalibur.Weather.Helpers.Services
 
             // Get the current weather for specific latitude and longitude.
             return await service.GetCurrentWeatherAsync(latitude, longitude, "", token);
+        }
+
+        #endregion
+
+        #region Short-Term Forecast
+
+        /// <summary>
+        /// Builds the short-term (15-minute) forecast.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns></returns>
+        public static async Task<ShortTermForecastPoint[]?> BuildShortTermForecastAsync(string latitude, string longitude, ILogger logger, CancellationToken token)
+        {
+            var shortTermResponse = await GetShortTermForecastAsync(latitude, longitude, logger, token);
+
+            // Short-term forecast must have a value to process.
+            if (shortTermResponse?.Minutely15 is not { } data || data.Time == null) return null;
+
+            // Build forecast points
+            var points = new ShortTermForecastPoint[data.Time.Length];
+            var timezone = shortTermResponse?.Timezone;
+            for (int index = 0; index < data.Time.Length; index++)
+            {
+                points[index] = new ShortTermForecastPoint(data, index, timezone);
+            }
+            return points;
+        }
+
+        /// <summary>
+        /// Gets the short-term forecast asynchronously.
+        /// </summary>
+        /// <param name="latitude">The latitude.</param>
+        /// <param name="longitude">The longitude.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="token">The cancellation token.</param>
+        /// <returns></returns>
+        private static async Task<ShortTermForecastResponse?> GetShortTermForecastAsync(string latitude, string longitude, ILogger logger, CancellationToken token)
+        {
+            var service = new OpenMeteoService(_sharedHttpClient, logger);
+
+            // Get the short-term forecast for specific latitude and longitude.
+            return await service.GetShortTermForecastAsync(latitude, longitude, "", token);
         }
 
         #endregion
@@ -171,7 +217,8 @@ namespace Xcalibur.Weather.Helpers.Services
             if (data.Time.Length is 0) return null;
 
             // Create a string representation of the current hour.
-            var nowValue = DateTime.Now.ToString("yyyy-MM-ddTHH:00");
+            var timezone = response?.Timezone;
+            var nowValue = DateTime.Now.ConvertFromTimezone(timezone).ToString("yyyy-MM-ddTHH:00");
 
             // Build daily forecast points.
             var forecastPoints = new HourlyForecastPoint[data.Time.Length];
@@ -181,11 +228,11 @@ namespace Xcalibur.Weather.Helpers.Services
                 var isCurrent = dateValue == nowValue;
 
                 // Map data to forecast point
-                var point = new HourlyForecastPoint(data, index, isCurrent);
+                var point = new HourlyForecastPoint(data, index, timezone, isCurrent);
                 if (supplementalResponse?.Hourly is { } supplementalData && supplementalData.Time.Length > index)
                 {
                     // Map supplemental data to forecast point
-                    point.Map(supplementalData, index, isCurrent);
+                    point.Map(supplementalData, index, timezone, isCurrent);
                 }
 
                 // Assign the point to the forecast points array.
@@ -312,7 +359,8 @@ namespace Xcalibur.Weather.Helpers.Services
             if (data.Time.Length is 0) return null;
 
             // Create a string representation of the current hour.
-            var nowValue = DateTime.Now.ToString("yyyy-MM-dd");
+            var timezone = response?.Timezone;
+            var nowValue = DateTime.Now.ConvertFromTimezone(timezone).ToString("yyyy-MM-dd");
 
             // Build daily forecast points.
             var forecastPoints = new DailyForecastPoint[data.Time.Length];
@@ -323,7 +371,7 @@ namespace Xcalibur.Weather.Helpers.Services
                 if (supplementalResponse?.Daily is { } supplementalData && supplementalData.Time.Length > index)
                 {
                     // Map supplemental data to forecast point
-                    point.Map(supplementalData, index, nowValue);
+                    point.Map(supplementalData, index, nowValue, timezone);
                 }
 
                 // Assign the point to the forecast points array.
@@ -351,7 +399,7 @@ namespace Xcalibur.Weather.Helpers.Services
             var airQualityResponse = await GetCurrentAirQualityAsync(latitude, longitude, logger, token);
 
             // Build AirQualityPoint
-            return airQualityResponse?.Current is null ? null : new AirQualityPoint(airQualityResponse.Current);
+            return airQualityResponse?.Current is null ? null : new AirQualityPoint(airQualityResponse.Current, airQualityResponse.Timezone);
         }
 
         /// <summary>
@@ -391,7 +439,8 @@ namespace Xcalibur.Weather.Helpers.Services
             if (data.Time.Length is 0) return null;
 
             // Create a string representation of the current hour.
-            var nowValue = DateTime.Now.ToString("yyyy-MM-ddTHH:00");
+            var timezone = response.Timezone;
+            var nowValue = DateTime.Now.ConvertFromTimezone(timezone).ToString("yyyy-MM-ddTHH:00");
 
             // Build daily forecast points.
             var points = new AirQualityPoint[data.Time.Length];
@@ -401,7 +450,7 @@ namespace Xcalibur.Weather.Helpers.Services
                 var isCurrent = dateValue == nowValue;
 
                 // Map data to forecast point
-                points[index] = new AirQualityPoint(data, index, isCurrent);
+                points[index] = new AirQualityPoint(data, index, timezone, isCurrent);
             }
 
             // Return the built forecast points.
