@@ -1,6 +1,6 @@
 # Xcalibur.Weather.Helpers
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.3-blue)
 ![.NET Version](https://img.shields.io/badge/.NET-10.0-blue)
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
@@ -36,7 +36,23 @@ This library is ideal for:
 - **Prototyping & MVPs**: Rapid development with high-level helper methods
 - **Web APIs**: REST services exposing weather data with built-in unit conversion
 
-## 🎉 What's New in v1.1.0
+## 🎉 What's New in v1.1.3
+
+**METAR Parsing Reliability Update** - Improved JSON handling for weather observation data:
+
+- ✅ **METAR Visibility Deserialization Fix**: `MetarProperties.Visib` now accepts numeric JSON tokens correctly
+  - Uses `NullableDoubleFromJsonConverter` for more resilient observation parsing
+  - Prevents failures when upstream METAR payloads return numeric visibility values
+  - Improves compatibility with real-world weather observation responses
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.1.3
+- 🔗 **Maintained**: Dependency on Microsoft.Extensions.Hosting v10.0.11
+- 📦 **Packaging**: README and package metadata aligned for v1.1.3
+
+**Benefits**: Applications using observation and METAR-backed flows now get more reliable visibility parsing from provider responses.
+
+---
+
+### Previous Release - v1.1.0
 
 **Observation, Timezone, and API Modernization Update** - Expanded helper coverage and cleaner public APIs:
 
@@ -293,13 +309,13 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.1.0" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.1.3" />
 ```
 
 ## Requirements
 
 - **.NET 10.0** or later
-- **Xcalibur.Weather.Services 1.1.0** (included as dependency)
+- **Xcalibur.Weather.Services 1.1.3** (included as dependency)
 - **Microsoft.Extensions.Hosting 10.0.11** (included as dependency)
 
 ## Usage
@@ -384,29 +400,33 @@ var airQuality = await OpenMeteoHelper.BuildAirQualityPointAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
     logger: logger,
-    cancellationToken: CancellationToken.None
+    token: CancellationToken.None
 );
 
 // Build current weather forecast
 var currentForecast = await OpenMeteoHelper.BuildCurrentForecastAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
-    canAssessDayNight: true,
-    sunrise: new TimeOnly(6, 30),
-    sunset: new TimeOnly(18, 30),
     logger: logger,
-    cancellationToken: CancellationToken.None
+    token: CancellationToken.None
+);
+
+// Build short-term (15-minute) forecast
+var shortTermForecast = await OpenMeteoHelper.BuildShortTermForecastAsync(
+    latitude: "40.7128",
+    longitude: "-74.0060",
+    logger: logger,
+    token: CancellationToken.None
 );
 
 // Build hourly forecast
 var hourlyForecast = await OpenMeteoHelper.BuildHourlyForecastAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
-    canAssessDayNight: true,
-    sunrise: new TimeOnly(6, 30),
-    sunset: new TimeOnly(18, 30),
+    forecastDays: 2,
+    pastDays: 0,
     logger: logger,
-    cancellationToken: CancellationToken.None
+    token: CancellationToken.None
 );
 
 // Build daily forecast
@@ -414,27 +434,38 @@ var dailyForecast = await OpenMeteoHelper.BuildDailyForecastAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
     forecastDays: 7,
+    pastDays: 0,
     logger: logger,
-    cancellationToken: CancellationToken.None
+    token: CancellationToken.None
+);
+
+// Build hourly air quality forecast/history
+var hourlyAirQuality = await OpenMeteoHelper.BuildHourlyAirQualityAsync(
+    latitude: "40.7128",
+    longitude: "-74.0060",
+    forecastDays: 2,
+    pastDays: 1,
+    logger: logger,
+    token: CancellationToken.None
 );
 
 // Build yesterday's hourly forecast
 var yesterdayHourlyForecast = await OpenMeteoHelper.BuildYesterdayHourlyForecastAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
-    canAssessDayNight: true,
-    sunrise: new TimeOnly(6, 30),
-    sunset: new TimeOnly(18, 30),
+    dateValue: "2026-01-14",
     logger: logger,
-    cancellationToken: CancellationToken.None
+    token: CancellationToken.None
 );
 
 // Build yesterday's daily forecast
 var yesterdayDailyForecast = await OpenMeteoHelper.BuildYesterdayDailyForecastAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
+    startDateValue: "2026-01-13",
+    endDateValue: "2026-01-14",
     logger: logger,
-    cancellationToken: CancellationToken.None
+    token: CancellationToken.None
 );
 ```
 
@@ -650,7 +681,7 @@ var observation = await WeatherObservationHelper.GetObservationAsync(
     latitude: "40.7128",
     longitude: "-74.0060",
     logger: logger,
-    cancellationToken: CancellationToken.None
+    token: CancellationToken.None
 );
 
 // Get several nearby observations
@@ -659,7 +690,7 @@ var nearbyObservations = await WeatherObservationHelper.GetMultipleObservationsA
     longitude: "-74.0060",
     maxResults: 5,
     logger: logger,
-    cancellationToken: CancellationToken.None
+    token: CancellationToken.None
 );
 
 // Determine the observation routing region
@@ -815,13 +846,15 @@ The library ships with a comprehensive xUnit test suite covering all helpers and
 | Area | Tests | Coverage |
 |------|-------|----------|
 | `ConversionHelper` | Temperature, wind speed, length, and pressure conversions and formatting — including nullable overloads, null-unit guards, near-zero normalisation, and invalid-unit exceptions | Full public API |
-| `OpenMeteoHelper` | Air quality, current, hourly, daily, and yesterday forecasts — including absent/empty response blocks and day/night assessment | Full public API |
+| `OpenMeteoHelper` | Air quality, current, short-term, hourly, daily, and yesterday forecasts — including absent/empty response blocks and timezone-aware current-point assessment | Full public API |
 | `GeocodioHelper` | Address location mapping (single and multiple results), null/empty/invalid-JSON responses, API key validation | Full public API |
 | `IpGeoHelper` | Sun/moon point mapping, null/whitespace key guards, deserialization, and HTTP error responses | Full public API |
 | `SunriseSunsetHelper` | Sun/moon point mapping, successful deserialization, HTTP error and invalid-JSON responses | Full public API |
-| `OpenStreetMapHelper` | Address location mapping, `town` fallback, empty/null/invalid-JSON/HTTP error responses | Full public API |
+| `OpenStreetMapHelper` | Address location mapping, `town` fallback, language/country filtering, empty/null/invalid-JSON/HTTP error responses | Full public API |
 | `AtmosporeHelper` | Pollen forecast deserialization, API key validation, null/whitespace guards, HTTP error and invalid-JSON responses | Full public API |
-| `WeatherAlertHelper` | Combined alert aggregation, individual source helpers (Meteoalarm, NWS, GDACS, Environment Canada, BOM, EMSC, DWD), cancellation behavior | Full public API |
+| `WeatherAlertHelper` | Combined alert aggregation, consolidation behavior, overlap resolution, and cancellation behavior | Full public API |
+| `WeatherObservationHelper` | Invalid coordinate handling, nearest observation routing, nearby observation retrieval, and region determination | Focused public API coverage |
+| `TimeZoneHelper` | Null handling and timezone conversion extension behavior | Full public API |
 | `WeatherRegionHelper` | Region determination (US, Canada, Europe, Australia), Germany bounds check, Canadian province detection, Australian state detection | Full public API |
 
 ### Running the Tests
@@ -853,8 +886,8 @@ All service helpers accept an `ILogger` parameter for diagnostics and troublesho
 using Microsoft.Extensions.Logging;
 
 ILogger logger = loggerFactory.CreateLogger<YourClass>();
-var forecast = await OpenMeteoHelper.BuildCurrentForecast(
-    latitude, longitude, true, sunrise, sunset, logger
+var forecast = await OpenMeteoHelper.BuildCurrentForecastAsync(
+    latitude, longitude, logger, CancellationToken.None
 );
 ```
 
@@ -864,12 +897,20 @@ Service helpers manage `HttpClient` usage internally, so callers can use the hel
 ## Dependencies
 
 This library depends on:
-- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.1.0) - Weather service providers and models
+- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.1.3) - Weather service providers and models
 - [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) (v10.0.11) - Hosting abstractions
 
 ## Changelog
 
-### Version 1.1.0 (Latest)
+### Version 1.1.3 (Latest)
+- 🐛 **Fixed**: `MetarProperties.Visib` now accepts numeric JSON tokens
+  - Uses `NullableDoubleFromJsonConverter` for more resilient METAR observation parsing
+  - Prevents failures when providers return numeric visibility values directly
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.1.3
+- 🔗 **Maintained**: Dependency on Microsoft.Extensions.Hosting v10.0.11
+- 📦 **Packaging**: Package metadata and README synchronized for v1.1.3
+
+### Version 1.1.0
 - ✨ **New**: `WeatherObservationHelper` for nearest and nearby observation retrieval
   - Supports string and numeric coordinates
   - Adds region detection for observation routing
@@ -998,7 +1039,7 @@ Copyright © 2006 - 2026, Xcalibur Systems, LLC - All Rights Reserved
 
 ## Related Projects
 
-- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.1.0) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
+- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.1.3) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
 
 ---
 

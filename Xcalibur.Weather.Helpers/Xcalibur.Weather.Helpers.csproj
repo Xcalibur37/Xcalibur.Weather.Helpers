@@ -7,7 +7,7 @@
 
 		<!-- NuGet Package Metadata -->
 		<PackageId>Xcalibur.Weather.Helpers</PackageId>
-		<Version>1.1.0</Version>
+		<Version>1.1.3</Version>
 		<Authors>Joshua Arzt</Authors>
 		<Company>Xcalibur Systems, LLC.</Company>
 		<Product>Xcalibur.Weather.Helpers</Product>
@@ -17,7 +17,7 @@
 		<RepositoryType>git</RepositoryType>
 		<PackageIcon>X_logo_512.png</PackageIcon>
 		<PackageTags>weather;helpers;utilities;conversion;openmeteo;geocoding;air-quality;weather-data;temperature;wind-speed;meteorology;ipgeolocation;units</PackageTags>
-		<PackageReleaseNotes>v1.1.0 adds WeatherObservationHelper, TimeZoneHelper, OpenMeteo short-term forecast support, timezone-aware OpenMeteo mapping, OpenStreetMap language/country filtering, and consolidated WeatherAlertHelper APIs. Updated dependencies: Xcalibur.Weather.Services 1.1.0, Microsoft.Extensions.Hosting 10.0.11.</PackageReleaseNotes>
+		<PackageReleaseNotes>Fixed MetarProperties.Visib to accept numeric JSON tokens (NullableDoubleFromJsonConverter).</PackageReleaseNotes>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<PackageLicenseExpression></PackageLicenseExpression>
@@ -51,7 +51,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
-		<PackageReference Include="Xcalibur.Weather.Services" Version="1.1.0" />
+		<PackageReference Include="Xcalibur.Weather.Services" Version="1.1.3" />
 	</ItemGroup>
 
 </Project>
