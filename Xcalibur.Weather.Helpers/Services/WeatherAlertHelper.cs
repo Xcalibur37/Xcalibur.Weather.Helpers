@@ -39,14 +39,13 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="token">The cancellation token.</param>
         /// <param name="provinceCode">Optional: Province/territory code for Canada (e.g., 'on', 'bc'). If null, will be determined from coordinates if in Canada.</param>
         /// <param name="stateCode">Optional: State/territory code for Australia (e.g., 'nsw', 'vic'). If null, will be determined from coordinates if in Australia.</param>
-        /// <returns>Combined weather alert information or null if no alerts are available.</returns>
+        /// <param name="countryName">Name of the country.</param>
+        /// <returns>
+        /// Combined weather alert information or null if no alerts are available.
+        /// </returns>
         public static async Task<CombinedWeatherAlertInformation?> BuildCombinedAlertsAsync(
-            string latitude,
-            string longitude,
-            ILogger logger,
-            CancellationToken token,
-            string? provinceCode = null,
-            string? stateCode = null)
+            string latitude, string longitude, ILogger logger, CancellationToken token,
+            string? provinceCode = null, string? stateCode = null, string? countryName = null)
         {
             // Validate coordinates
             if (!double.TryParse(latitude, out var lat) || !double.TryParse(longitude, out var lon))
@@ -94,7 +93,8 @@ namespace Xcalibur.Weather.Helpers.Services
 
                 case WeatherRegion.Europe:
                     logger.LogDebug("Querying Meteoalarm for European location");
-                    tasks.Add(Task.Run(async () => meteoalarm = await GetMeteoalarmAlertsAsync(latitude, longitude, logger, token), token));
+                    var country = countryName ?? "Europe"; // Default to Europe if country name is not provided
+                    tasks.Add(Task.Run(async () => meteoalarm = await GetMeteoalarmAlertsAsync(country, logger, token), token));
 
                     // If in Germany, also query DWD
                     if (WeatherRegionHelper.IsInGermany(lat, lon))
@@ -180,14 +180,15 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <summary>
         /// Gets alerts from Meteoalarm API only.
         /// </summary>
-        /// <param name="latitude">The latitude.</param>
-        /// <param name="longitude">The longitude.</param>
+        /// <param name="country">The country.</param>
         /// <param name="logger">The logger.</param>
         /// <param name="token">The cancellation token.</param>
-        /// <returns>Meteoalarm response or null.</returns>
+        /// <returns>
+        /// Meteoalarm response or null.
+        /// </returns>
         private static async Task<MeteoalarmAlertsResponse?> GetMeteoalarmAlertsAsync(
-            string latitude, string longitude, ILogger logger, CancellationToken token)
-            => await new WeatherAlertService(_sharedHttpClient, logger).GetMeteoalarmAlertsAsync(latitude, longitude, token);
+            string country, ILogger logger, CancellationToken token)
+            => await new WeatherAlertService(_sharedHttpClient, logger).GetMeteoalarmAlertsAsync(country, token);
 
         #endregion
 
@@ -238,7 +239,7 @@ namespace Xcalibur.Weather.Helpers.Services
         /// </returns>
         private static async Task<EnvironmentCanadaAlertsResponse?> GetEnvironmentCanadaAlertsAsync(
             string latitude, string longitude, string provinceCode, ILogger logger, CancellationToken token)
-            => await new WeatherAlertService(_sharedHttpClient, logger).GetEnvironmentCanadaAlertsAsync(latitude, longitude, provinceCode, token);
+            => await new WeatherAlertService(_sharedHttpClient, logger).GetEnvironmentCanadaAlertsAsync(token);
 
         #endregion
 
@@ -257,7 +258,7 @@ namespace Xcalibur.Weather.Helpers.Services
         /// </returns>
         private static async Task<BomAlertsResponse?> GetBomAlertsAsync(
             string latitude, string longitude, string stateCode, ILogger logger, CancellationToken token)
-            => await new WeatherAlertService(_sharedHttpClient, logger).GetBomAlertsAsync(latitude, longitude, stateCode, token);
+            => await new WeatherAlertService(_sharedHttpClient, logger).GetBomAlertsAsync(token);
 
         #endregion
 

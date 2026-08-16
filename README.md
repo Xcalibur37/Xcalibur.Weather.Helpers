@@ -1,6 +1,6 @@
 # Xcalibur.Weather.Helpers
 
-![Version](https://img.shields.io/badge/version-1.1.5-blue)
+![Version](https://img.shields.io/badge/version-1.1.6-blue)
 ![.NET Version](https://img.shields.io/badge/.NET-10.0-blue)
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
@@ -36,7 +36,23 @@ This library is ideal for:
 - **Prototyping & MVPs**: Rapid development with high-level helper methods
 - **Web APIs**: REST services exposing weather data with built-in unit conversion
 
-## 🎉 What's New in v1.1.5
+## 🎉 What's New in v1.1.6
+
+**Meteoalarm Feed Reliability Update** - Replaced runtime slug generation with an explicit country-lookup table:
+
+- ✅ **Meteoalarm Country Lookup**: `WeatherAlertService.GetMeteoalarmAlertsAsync` now resolves country names against a curated `MeteoalarmFeedSlugs` dictionary (40 entries, case-insensitive)
+  - Unsupported country names short-circuit immediately with a warning log and `null` return — no speculative HTTP requests
+  - Irregular slugs such as `czechia` (Czech Republic) and `republic-of-north-macedonia` (North Macedonia) are mapped correctly, which the old runtime slugifier could not guarantee
+  - Leading/trailing whitespace is trimmed before the lookup
+- ✅ **`BuildCombinedAlertsAsync` Enhancement**: Added optional `countryName` parameter
+  - When coordinates resolve to the Europe region, callers can supply a specific country name (e.g., `"Austria"`) for a targeted feed, or omit it to default to the `"Europe"` aggregate feed
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.1.6
+
+**Benefits**: Meteoalarm alert retrieval is now predictable and fail-fast for unsupported regions, and callers can target specific European country feeds instead of always using the aggregate feed.
+
+---
+
+### Previous Release - v1.1.5
 
 **Native AOT Observation Serialization Update** - Hardened JSON metadata coverage for weather observation flows:
 
@@ -47,6 +63,7 @@ This library is ideal for:
 - 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.1.5
 - 🔗 **Maintained**: Dependency on Microsoft.Extensions.Hosting v10.0.11
 - 🧪 **Testing**: Expanded helper coverage for `WeatherObservationHelper` and `TimeZoneHelper`
+- 📦 **Packaging**: README and package metadata aligned for v1.1.5
 
 **Benefits**: Applications using weather observation flows now have stronger compatibility with Native AOT deployments while retaining resilient NWS and METAR deserialization behavior.
 
@@ -246,7 +263,7 @@ foreach (var alert in consolidated)
 
 - [Purpose](#purpose)
 - [Use Cases](#-use-cases)
-- [What's New](#-whats-new-in-v115)
+- [What's New](#-whats-new-in-v116)
 - [Features](#features)
   - [Conversion Utilities](#conversion-utilities)
   - [Weather Service Helpers](#weather-service-helpers)
@@ -309,13 +326,13 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.1.5" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.1.6" />
 ```
 
 ## Requirements
 
 - **.NET 10.0** or later
-- **Xcalibur.Weather.Services 1.1.5** (included as dependency)
+- **Xcalibur.Weather.Services 1.1.6** (included as dependency)
 - **Microsoft.Extensions.Hosting 10.0.11** (included as dependency)
 
 ## Usage
@@ -852,7 +869,8 @@ The library ships with a comprehensive xUnit test suite covering all helpers and
 | `SunriseSunsetHelper` | Sun/moon point mapping, successful deserialization, HTTP error and invalid-JSON responses | Full public API |
 | `OpenStreetMapHelper` | Address location mapping, `town` fallback, language/country filtering, empty/null/invalid-JSON/HTTP error responses | Full public API |
 | `AtmosporeHelper` | Pollen forecast deserialization, API key validation, null/whitespace guards, HTTP error and invalid-JSON responses | Full public API |
-| `WeatherAlertHelper` | Combined alert aggregation, consolidation behavior, overlap resolution, and cancellation behavior | Full public API |
+| `WeatherAlertHelper` | Combined alert aggregation, consolidation behavior, overlap resolution, `countryName` parameter routing, and cancellation behavior | Full public API |
+| `WeatherAlertService` | Meteoalarm country-lookup (all 40 supported feeds, case-insensitive, whitespace trim), non-European short-circuit, HTTP error handling | Full `GetMeteoalarmAlertsAsync` API |
 | `WeatherObservationHelper` | Invalid coordinate handling, nearest observation routing, nearby observation retrieval, and string/double overload region determination | Focused public API coverage |
 | `TimeZoneHelper` | Null handling and timezone conversion behavior across all nullable and non-nullable overloads | Full public API |
 | `WeatherRegionHelper` | Region determination (US, Canada, Europe, Australia), Germany bounds check, Canadian province detection, Australian state detection | Full public API |
@@ -897,12 +915,23 @@ Service helpers manage `HttpClient` usage internally, so callers can use the hel
 ## Dependencies
 
 This library depends on:
-- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.1.5) - Weather service providers and models
+- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.1.6) - Weather service providers and models
 - [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) (v10.0.11) - Hosting abstractions
 
 ## Changelog
 
-### Version 1.1.5 (Latest)
+### Version 1.1.6 (Latest)
+- ✨ **Improved**: Meteoalarm feed resolution replaced runtime slug-builder with a curated `MeteoalarmFeedSlugs` lookup
+  - 40 European countries and the `"Europe"` aggregate feed supported
+  - Unsupported countries short-circuit immediately with a warning — no speculative HTTP requests
+  - Irregular slugs (`czechia`, `republic-of-north-macedonia`) mapped correctly
+- ✨ **Improved**: `BuildCombinedAlertsAsync` accepts optional `countryName` for targeted European feed selection
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.1.6
+- 🔗 **Maintained**: Dependency on Microsoft.Extensions.Hosting v10.0.11
+- 🧪 **Testing**: Added `WeatherAlertServiceTests` (53 tests) covering full country lookup table, case sensitivity, HTTP error paths, and helper `countryName` routing
+- 📦 **Packaging**: Package metadata and README synchronized for v1.1.6
+
+### Version 1.1.5
 - ✨ **Improved**: Native AOT compatibility for observation deserialization
   - Added explicit source-generated JSON metadata coverage for NWS observation payloads
   - Added explicit source-generated JSON metadata coverage for METAR observation payloads
@@ -1041,7 +1070,7 @@ Copyright © 2006 - 2026, Xcalibur Systems, LLC - All Rights Reserved
 
 ## Related Projects
 
-- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.1.5) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
+- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.1.6) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
 
 ---
 

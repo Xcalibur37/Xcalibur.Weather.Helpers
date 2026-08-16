@@ -152,6 +152,55 @@ namespace Xcalibur.Weather.Helpers.Tests.Services
 
         #endregion
 
+        #region countryName Parameter
+
+        [Fact]
+        public async Task BuildCombinedAlertsAsync_WithKnownCountryName_AcceptsParameter()
+        {
+            // Arrange — European coordinates; supply a recognised country name explicitly
+            const string validLat = "48.2082";   // Vienna
+            const string validLon = "16.3738";
+            var logger = NullLogger.Instance;
+
+            // Act — verify the method accepts the parameter without throwing
+            // (result may be null if the network call fails in a test environment)
+            var act = async () => await WeatherAlertHelper.BuildCombinedAlertsAsync(
+                validLat, validLon, logger, CancellationToken.None, countryName: "Austria");
+
+            await act.Should().NotThrowAsync();
+        }
+
+        [Fact]
+        public async Task BuildCombinedAlertsAsync_WithUnknownCountryName_AcceptsParameter()
+        {
+            // An unknown country name is handled gracefully inside the service (returns null);
+            // the helper must not throw regardless.
+            const string validLat = "48.2082";
+            const string validLon = "16.3738";
+            var logger = NullLogger.Instance;
+
+            var act = async () => await WeatherAlertHelper.BuildCombinedAlertsAsync(
+                validLat, validLon, logger, CancellationToken.None, countryName: "Atlantis");
+
+            await act.Should().NotThrowAsync();
+        }
+
+        [Fact]
+        public async Task BuildCombinedAlertsAsync_WithNullCountryName_AcceptsParameter()
+        {
+            // null countryName means the Europe branch defaults to "Europe"
+            const string validLat = "48.2082";
+            const string validLon = "16.3738";
+            var logger = NullLogger.Instance;
+
+            var act = async () => await WeatherAlertHelper.BuildCombinedAlertsAsync(
+                validLat, validLon, logger, CancellationToken.None, countryName: null);
+
+            await act.Should().NotThrowAsync();
+        }
+
+        #endregion
+
         #region Edge Cases
 
         // NOTE: Edge case integration tests removed - they make actual API calls to GDACS and EMSC

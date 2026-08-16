@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace Xcalibur.Weather.Helpers.Services
 {
     /// <summary>
@@ -8,6 +10,7 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <summary>
         /// United States (including Alaska and Hawaii).
         /// </summary>
+        [Description("")]
         UnitedStates,
 
         /// <summary>
