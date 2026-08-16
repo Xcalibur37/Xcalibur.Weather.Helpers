@@ -1,6 +1,6 @@
 # Xcalibur.Weather.Helpers
 
-![Version](https://img.shields.io/badge/version-1.1.4-blue)
+![Version](https://img.shields.io/badge/version-1.1.5-blue)
 ![.NET Version](https://img.shields.io/badge/.NET-10.0-blue)
 [![NuGet](https://img.shields.io/nuget/v/Xcalibur.Weather.Helpers.svg)](https://www.nuget.org/packages/Xcalibur.Weather.Helpers/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE-2.0.txt)
@@ -36,7 +36,7 @@ This library is ideal for:
 - **Prototyping & MVPs**: Rapid development with high-level helper methods
 - **Web APIs**: REST services exposing weather data with built-in unit conversion
 
-## 🎉 What's New in v1.1.4
+## 🎉 What's New in v1.1.5
 
 **Native AOT Observation Serialization Update** - Hardened JSON metadata coverage for weather observation flows:
 
@@ -44,10 +44,9 @@ This library is ideal for:
   - Ensures observation payloads can be deserialized correctly in Native AOT scenarios
   - Reduces runtime serializer metadata gaps for NWS and METAR-backed responses
   - Improves reliability for trimmed and ahead-of-time compiled applications
-- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.1.4
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.1.5
 - 🔗 **Maintained**: Dependency on Microsoft.Extensions.Hosting v10.0.11
 - 🧪 **Testing**: Expanded helper coverage for `WeatherObservationHelper` and `TimeZoneHelper`
-- 📦 **Packaging**: README and package metadata aligned for v1.1.4
 
 **Benefits**: Applications using weather observation flows now have stronger compatibility with Native AOT deployments while retaining resilient NWS and METAR deserialization behavior.
 
@@ -247,7 +246,7 @@ foreach (var alert in consolidated)
 
 - [Purpose](#purpose)
 - [Use Cases](#-use-cases)
-- [What's New](#-whats-new-in-v114)
+- [What's New](#-whats-new-in-v115)
 - [Features](#features)
   - [Conversion Utilities](#conversion-utilities)
   - [Weather Service Helpers](#weather-service-helpers)
@@ -310,13 +309,13 @@ dotnet add package Xcalibur.Weather.Helpers
 
 ### Package Reference
 ```xml
-<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.1.4" />
+<PackageReference Include="Xcalibur.Weather.Helpers" Version="1.1.5" />
 ```
 
 ## Requirements
 
 - **.NET 10.0** or later
-- **Xcalibur.Weather.Services 1.1.4** (included as dependency)
+- **Xcalibur.Weather.Services 1.1.5** (included as dependency)
 - **Microsoft.Extensions.Hosting 10.0.11** (included as dependency)
 
 ## Usage
@@ -898,20 +897,20 @@ Service helpers manage `HttpClient` usage internally, so callers can use the hel
 ## Dependencies
 
 This library depends on:
-- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.1.4) - Weather service providers and models
+- [Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/) (v1.1.5) - Weather service providers and models
 - [Microsoft.Extensions.Hosting](https://www.nuget.org/packages/Microsoft.Extensions.Hosting/) (v10.0.11) - Hosting abstractions
 
 ## Changelog
 
-### Version 1.1.4 (Latest)
+### Version 1.1.5 (Latest)
 - ✨ **Improved**: Native AOT compatibility for observation deserialization
   - Added explicit source-generated JSON metadata coverage for NWS observation payloads
   - Added explicit source-generated JSON metadata coverage for METAR observation payloads
   - Hardens serializer behavior for trimmed and ahead-of-time compiled applications
-- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.1.4
+- 🔗 **Updated**: Dependency on Xcalibur.Weather.Services v1.1.5
 - 🔗 **Maintained**: Dependency on Microsoft.Extensions.Hosting v10.0.11
 - 🧪 **Testing**: Expanded `WeatherObservationHelper` and `TimeZoneHelper` coverage for additional overload and edge-case behavior
-- 📦 **Packaging**: Package metadata and README synchronized for v1.1.4
+- 📦 **Packaging**: Package metadata and README synchronized for v1.1.5
 
 ### Version 1.1.0
 - ✨ **New**: `WeatherObservationHelper` for nearest and nearby observation retrieval
@@ -1042,7 +1041,7 @@ Copyright © 2006 - 2026, Xcalibur Systems, LLC - All Rights Reserved
 
 ## Related Projects
 
-- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.1.4) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
+- **[Xcalibur.Weather.Services](https://www.nuget.org/packages/Xcalibur.Weather.Services/)** (v1.1.5) - HTTP client services for weather APIs and models ([GitHub](https://github.com/Xcalibur37/Xcalibur.Weather.Services))
 
 ---
 
