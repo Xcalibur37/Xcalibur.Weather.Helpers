@@ -144,29 +144,33 @@ namespace Xcalibur.Weather.Helpers.Services
         /// <param name="token">The cancellation token.</param>
         /// <param name="provinceCode">Optional: Province/territory code for Canada (e.g., 'on', 'bc'). If null, will be determined from coordinates if in Canada.</param>
         /// <param name="stateCode">Optional: State/territory code for Australia (e.g., 'nsw', 'vic'). If null, will be determined from coordinates if in Australia.</param>
+        /// <param name="countryName">Name of the country.</param>
         /// <returns>
         /// A consolidated list of weather alerts with overlapping duplicates removed.
         /// Returns an empty list if no alerts are available.
         /// </returns>
         /// <example>
-        /// <code>
+        ///   <code>
         /// var alerts = await WeatherAlertHelper.BuildCombinedAlertsConsolidatedAsync(
-        ///     "39.4300996", "-77.804161", logger, cancellationToken);
-        /// 
+        /// "39.4300996", "-77.804161", logger, cancellationToken);
         /// foreach (var alert in alerts)
         /// {
-        ///     Console.WriteLine($"[{alert.Severity}] {alert.Event}");
+        /// Console.WriteLine($"[{alert.Severity}] {alert.Event}");
         /// }
         /// </code>
         /// </example>
         public static async Task<IReadOnlyList<WeatherAlertItem>> BuildCombinedAlertsConsolidatedAsync(
-            string latitude, string longitude, ILogger logger, CancellationToken token, string? provinceCode = null, string? stateCode = null)
+            string latitude, string longitude, ILogger logger, CancellationToken token, 
+            string? provinceCode = null, string? stateCode = null, string? countryName = null)
         {
             // Get combined alerts
-            var combined = await BuildCombinedAlertsAsync(latitude, longitude, logger, token, provinceCode, stateCode);
+            var combined = await BuildCombinedAlertsAsync(latitude, longitude, logger, token, provinceCode, stateCode, countryName);
 
             // If no alerts are available, return empty list
-            if (combined is not null && combined.Alerts.Count != 0) return ConsolidateAlerts(combined.Alerts, logger);
+            if (combined is not null && combined.Alerts.Count != 0)
+            {
+                return ConsolidateAlerts(combined.Alerts, logger);
+            }
             logger.LogDebug("No alerts available for consolidation");
             return [];
 
